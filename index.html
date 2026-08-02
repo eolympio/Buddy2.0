@@ -1436,6 +1436,7 @@
     for(var i=0;i<b.per.length;i++) meals.push([b.per[i].naam, b.per[i].maal]);
     var olie = b.kg < 12 ? "7,5" : (b.kg < 20 ? "10" : "15");
     var d = {v:1, n:state.profiel.naam||"Buddy", r:state.profiel.ras||"", m:meals, o:olie,
+             k:Math.round(dagKcal(b.kg, b.band)),
              a:state.profiel.arts||"", c:state.profiel.chip||"", t:(state.oppas.notities||"").slice(0,400)};
     return location.origin + location.pathname + "#oppas=" + b64uEnc(JSON.stringify(d));
   }
@@ -1472,7 +1473,11 @@
       nooit:"Nooit geven",
       nooitLijst:["Chocolade, druiven, rozijnen, ui, knoflook, avocado","Alles met xylitol (suikervrije kauwgom)","Gekookte botten","Restjes van tafel, hoe zielig hij ook kijkt"],
       nood:"Noodgevallen", gif:"Antigifcentrum (24/7)", arts:"Dierenarts", chip:"Chipnummer",
-      notities:"Notities van het baasje"
+      notities:"Notities van het baasje",
+      ander:"Ander voer in huis?", anderUitleg:"Vul in hoeveel kcal per 100 g op de verpakking staat en je ziet meteen hoeveel je moet geven.",
+      anderLabel:"kcal per 100 g (staat op de verpakking)", vb:"bv. 350",
+      perMaal:"gram per maaltijd — 2× per dag",
+      anderNote:"Dit geldt als je alléén dit voer geeft. Een plotse wissel van voer kan de eerste dagen zachtere ontlasting geven — dat is normaal."
     },
     en: {
       titel:"Looking after", sub:"everything you need to know", ocht:"Morning · ± 8:00", av:"Evening · ± 19:00",
@@ -1485,7 +1490,11 @@
       nooit:"Never feed",
       nooitLijst:["Chocolate, grapes, raisins, onion, garlic, avocado","Anything with xylitol (sugar-free gum)","Cooked bones","Table scraps, no matter how he looks at you"],
       nood:"Emergencies", gif:"Poison centre BE (24/7)", arts:"Vet", chip:"Chip number",
-      notities:"Notes from the owner"
+      notities:"Notes from the owner",
+      ander:"Different food at hand?", anderUitleg:"Enter the kcal per 100 g from the packaging and you'll see right away how much to feed.",
+      anderLabel:"kcal per 100 g (on the packaging)", vb:"e.g. 350",
+      perMaal:"grams per meal — twice a day",
+      anderNote:"This applies when feeding only this food. A sudden food switch can cause softer stools for a few days — that's normal."
     }
   };
 
@@ -1494,7 +1503,15 @@
     if(hsh.indexOf("#oppas=") !== 0) return false;
     var d;
     try{ d = JSON.parse(b64uDec(hsh.slice(7))); }catch(e){ return false; }
-    var taal = "nl";
+    var taal = "nl", ovKcal = "";
+    function ovHerbereken(){
+      var uit = document.getElementById("ov-uit"), gEl = document.getElementById("ov-g");
+      if(!uit || !gEl) return;
+      var kc = parseFloat(ovKcal);
+      if(isNaN(kc) || kc < 40 || kc > 600){ uit.style.display = "none"; return; }
+      gEl.textContent = rond5((d.k / (kc/100)) / 2);
+      uit.style.display = "block";
+    }
     function render(){
       var T = OPPAS_TAAL[taal];
       var mh = "";
@@ -1518,6 +1535,12 @@
           '<div class="voet"><b>+ ' + d.o + ' ' + T.olie + '</b><br>' + T.meng + '</div></div></div>' +
         '<div class="kaart avond"><div class="kop"><span>' + T.av + '</span></div><div class="body">' + mh +
           '<div class="voet"><b>' + T.geenolie + '</b><br>' + T.meng + '</div></div></div>' +
+        (d.k ? '<h2>' + T.ander + '</h2><div class="kaart"><div class="body">' +
+          '<p style="font-size:13.5px;color:var(--soft);margin-bottom:10px;">' + T.anderUitleg + '</p>' +
+          '<div class="veldrij"><label>' + T.anderLabel + '</label><input id="ov-kcal" type="number" inputmode="numeric" placeholder="' + T.vb + '"></div>' +
+          '<div id="ov-uit" style="display:none;"><div class="portie"><span class="g" id="ov-g">—</span><span class="wat">' + T.perMaal + '</span></div></div>' +
+          '<p style="font-size:12.5px;color:var(--soft);margin-top:8px;">' + T.anderNote + '</p>' +
+        '</div></div>' : '') +
         '<h2>' + T.regel + '</h2><ol class="stappen">' + st + '</ol>' +
         '<div class="tip">' + T.uitlaten + '</div>' +
         '<div class="let-op">' + T.warmte + '</div>' +
@@ -1531,6 +1554,12 @@
         '<footer>Buddy-app</footer>';
       document.getElementById("t-nl").addEventListener("click", function(){ taal = "nl"; render(); });
       document.getElementById("t-en").addEventListener("click", function(){ taal = "en"; render(); });
+      var ov = document.getElementById("ov-kcal");
+      if(ov){
+        ov.value = ovKcal;
+        ov.addEventListener("input", function(){ ovKcal = this.value; ovHerbereken(); });
+        ovHerbereken();
+      }
       window.scrollTo(0,0);
     }
     render();
