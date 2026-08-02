@@ -1952,8 +1952,17 @@
   });
 
   /* ---------- beschikbaarheid vragen ---------- */
+  function openTrips(){
+    var trips = komendeTrips(), uit = [];
+    for(var i=0;i<trips.length;i++){
+      var o = state.rooster.oppas[trips[i].van] || {};
+      if(!o.ok) uit.push(trips[i]);
+    }
+    return uit;
+  }
+
   function vraagLink(){
-    var trips = komendeTrips().slice(0, 10);
+    var trips = openTrips().slice(0, 10);
     var lijst = [];
     for(var i=0;i<trips.length;i++){
       var o = state.rooster.oppas[trips[i].van] || {};
@@ -1965,6 +1974,7 @@
 
   function deelVraag(){
     if(!komendeTrips().length){ melden("Geen komende vluchten om te delen"); return; }
+    if(!openTrips().length){ melden("Alle vluchten zijn al geregeld 🎉"); return; }
     var url = vraagLink();
     var naam = state.profiel.naam || "Buddy";
     if(navigator.share){
