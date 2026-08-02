@@ -261,6 +261,7 @@
     <h2>Oppas</h2>
     <div class="kaart"><div class="body">
       <div class="veldrij"><label>Notities voor de oppas</label><textarea id="oppas-notities" rows="3" placeholder="bv. bang voor de stofzuiger, slaapt in de bench"></textarea></div>
+      <p id="oppas-inhoud" style="font-size:13px;font-weight:600;margin-bottom:10px;"></p>
       <button class="knop" id="oppas-deel">🔗 Deel de oppaslink</button>
       <p style="font-size:12.5px;color:var(--soft);margin-top:10px;">
         Stuur deze link via WhatsApp aan wie op <span id="oppas-naam">Buddy</span> past. Alles staat erin — eten, regels, noodnummers — in het Nederlands of Engels. Niets meer uitleggen dus.
@@ -708,6 +709,17 @@
     $("maal-av").innerHTML  = rijen("maal");
     $("dag-lijst").innerHTML = rijen("dag");
     $("olie").textContent = olie; $("olie2").textContent = olie;
+
+    var oi = $("oppas-inhoud");
+    if(oi){
+      if(b.per.length){
+        var namen = [];
+        for(var n2=0;n2<b.per.length;n2++) namen.push(b.per[n2].naam);
+        oi.innerHTML = 'In de oppaslink: <b>' + esc(namen.join(" + ")) + '</b>. Ander voer? Pas het aan bij Eten → Welk voer en deel de link opnieuw.';
+      } else {
+        oi.innerHTML = '<span style="color:var(--alarm);">Geen voer actief — zet bij Eten → Welk voer minstens één voer aan voordat je de link deelt.</span>';
+      }
+    }
     tekenVoerLijst();
   }
 
