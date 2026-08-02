@@ -198,13 +198,16 @@
   .kal-nav{width:40px;height:40px;flex:none;border:2px solid var(--ink);border-radius:50%;background:var(--paper);font-size:18px;font-weight:800;color:var(--ink);cursor:pointer;line-height:1;}
   .kal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
   .kal .wd{font-size:10.5px;font-weight:800;color:var(--soft);text-align:center;padding:2px 0;letter-spacing:.05em;}
-  .kal button{aspect-ratio:1;border:2px solid var(--line);border-radius:9px;background:var(--kaart);font-family:inherit;font-size:13.5px;font-weight:700;color:var(--ink);cursor:pointer;padding:0;}
+  .kal button{aspect-ratio:1;border:2px solid var(--line);border-radius:9px;background:var(--kaart);font-family:inherit;font-size:13.5px;font-weight:700;color:var(--ink);cursor:pointer;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;}
+  .kal button .bst{font-size:7.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;opacity:.85;margin-top:1px;max-width:100%;overflow:hidden;}
   .kal button.leeg{visibility:hidden;}
   .kal button.weg{background:var(--vlieg);border-color:var(--vlieg);color:#fff;}
   .kal button.vandaag{border-color:var(--ochtend);border-width:3px;}
   .trip-blok{padding:13px 0;border-bottom:1px solid var(--line);}
   .trip-blok:last-child{border-bottom:none;}
   .trip-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
+  .trip-kop{display:flex;justify-content:space-between;gap:10px;align-items:center;cursor:pointer;}
+  .trip-body{padding-top:4px;}
   .mens-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
   .mens-chip{border:2px solid;border-radius:99px;background:var(--paper);font-family:inherit;font-size:12.5px;font-weight:800;padding:6px 11px;cursor:pointer;}
   .mens-stip{width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;flex:none;padding:0;}
@@ -515,15 +518,17 @@
 
     <h2>Vluchten &amp; oppas</h2>
     <div class="kaart"><div class="body" id="trips-lijst"></div></div>
+    <p style="font-size:12.5px;color:var(--soft);margin-top:8px;">Tik op een vlucht om bestemming, terugkomst en oppas in te stellen — één tik op een naam en het is geregeld.</p>
 
-    <h2>Oppassers</h2>
-    <div class="kaart"><div class="body">
-      <div id="mensen-lijst"></div>
-      <p style="font-size:12.5px;color:var(--soft);margin-top:8px;">Tik op de stip om een andere kleur te kiezen. Nieuwe oppasser? Typ de naam gewoon bij een vlucht.</p>
-    </div></div>
     <button class="knop" id="rooster-vraag">📅 Vraag beschikbaarheid aan oppassers</button>
     <div style="height:8px;"></div>
     <button class="knop licht" id="rooster-deel">🍽 Deel de verzorgingsgids</button>
+    <div style="height:8px;"></div>
+    <button class="knop licht" id="mensen-toggle">👥 Oppassers beheren</button>
+    <div class="kaart" id="mensen-kaart" style="display:none;margin-top:12px;"><div class="body">
+      <div id="mensen-lijst"></div>
+      <p style="font-size:12.5px;color:var(--soft);margin-top:8px;">Tik op de stip om een andere kleur te kiezen, op het kruisje om iemand te verwijderen. Nieuwe oppasser? Typ de naam gewoon bij een vlucht.</p>
+    </div></div>
   </section>
 
   <!-- ============ ZORG ============ -->
@@ -665,7 +670,7 @@
         if(Array.isArray(d.voeding) && d.voeding.length) state.voeding = d.voeding;
         if(d.oppas) state.oppas = Object.assign({notities:""}, d.oppas);
         if(d.rooster) state.rooster = Object.assign({weg:{},oppas:{},mensen:[]}, d.rooster);
-        migrMensen();
+        migrMensen(); normOppas();
         var med = null;
         try{ med = JSON.parse(localStorage.getItem("buddy.v2.media") || "null"); }catch(e2){}
         if(med){
@@ -1323,7 +1328,7 @@
       if(Array.isArray(data.voeding) && data.voeding.length) state.voeding = data.voeding;
       state.oppas = Object.assign({notities:""}, data.oppas||{});
       state.rooster = Object.assign({weg:{},oppas:{},mensen:[]}, data.rooster||{});
-      migrMensen();
+      migrMensen(); normOppas();
       var on = $("oppas-notities"); if(on) on.value = state.oppas.notities;
 
       bewaarMedia(); bewaar(); tekenAlles();
@@ -1636,9 +1641,14 @@
     var m = vindMens(naam);
     return m ? m.kleur : sitterKleur(naam || "");
   }
+  function normOppas(){
+    for(var k in state.rooster.oppas){
+      var o = state.rooster.oppas[k];
+      if(o && o.wie && o.wie.trim()) o.ok = true;
+    }
+  }
   function migrMensen(){
     if(!Array.isArray(state.rooster.mensen)) state.rooster.mensen = [];
-    if(state.rooster.mensen.length) return;
     for(var k in state.rooster.oppas){
       var ow = (state.rooster.oppas[k] || {}).wie;
       if(ow) registreer(ow);
@@ -1646,6 +1656,7 @@
   }
   var nu0 = new Date();
   var roosterJaar = nu0.getFullYear(), roosterMaand = nu0.getMonth();
+  var openTrip = null;
 
   function pad2(n){ return (n<10?"0":"") + n; }
 
@@ -1694,11 +1705,12 @@
     for(var i=0;i<7;i++) h += '<div class="wd">' + wd[i] + '</div>';
     for(var o=0;o<offset;o++) h += '<button class="leeg" tabindex="-1"></button>';
     var vd = vandaag();
-    var kleurVan = {}, legende = {}, halve = {};
+    var kleurVan = {}, legende = {}, halve = {}, bestVan = {};
     var alleTrips = bouwTrips();
     for(var ti=0; ti<alleTrips.length; ti++){
       var tr = alleTrips[ti], oo = state.rooster.oppas[tr.van] || {};
       if(oo.terug === "och" || oo.terug === "mid") halve[tr.tot] = true;
+      if(oo.best) bestVan[tr.van] = oo.best.trim().slice(0,3).toUpperCase();
       if(!oo.ok) continue;
       var kl = kleurVoor(oo.wie || "");
       legende[oo.wie || "Geregeld"] = kl;
@@ -1719,7 +1731,11 @@
           stl = ' style="background:' + kkl + ';border-color:' + kkl + ';color:#fff;"';
         }
       }
-      h += '<button class="' + cls.join(" ") + '" data-d="' + iso + '"' + stl + '>' + d + '</button>';
+      var inhoud = String(d);
+      if(state.rooster.weg[iso] && bestVan[iso]){
+        inhoud = '<span>' + d + '</span><span class="bst">' + esc(String(bestVan[iso]).slice(0,3)) + '</span>';
+      }
+      h += '<button class="' + cls.join(" ") + '" data-d="' + iso + '"' + stl + '>' + inhoud + '</button>';
     }
     $("kal-grid").innerHTML = h;
     var lg = $("kal-legende");
@@ -1744,38 +1760,44 @@
       el.innerHTML = '<div class="leeg-tekst">Nog geen vluchten aangetikt.</div>';
       return;
     }
-    var naam = state.profiel.naam || "Buddy", h = "";
+    var h = "";
     for(var i=0;i<trips.length;i++){
       var t = trips[i];
       var o = state.rooster.oppas[t.van] || {};
       var titel = tripLabel(t) + (o.best ? " · " + esc(o.best) : "");
-      var sub = t.dagen + (t.dagen === 1 ? ' dag' : ' dagen') + ' weg' + (o.terug ? ' · terug ' + DAGDEEL[o.terug] : '');
-      var sel = '<select class="trip-wie trip-terug" data-k="' + t.van + '">' +
-                  '<option value=""' + (!o.terug ? ' selected' : '') + '>Terug: nog niet bekend</option>' +
-                  ['och','mid','av','nacht'].map(function(dd){
-                    return '<option value="' + dd + '"' + (o.terug === dd ? ' selected' : '') + '>Terug ' + DAGDEEL[dd] + '</option>';
-                  }).join('') +
-                '</select>';
-      var chips = "";
-      for(var mi=0; mi<state.rooster.mensen.length; mi++){
-        var mp = state.rooster.mensen[mi];
-        var az = o.wie && o.wie.trim().toLowerCase() === mp.naam.toLowerCase();
-        chips += '<button class="mens-chip" data-k="' + t.van + '" data-naam="' + esc(mp.naam) + '" style="' + (az ? 'background:' + mp.kleur + ';border-color:' + mp.kleur + ';color:#fff;' : 'color:' + mp.kleur + ';border-color:' + mp.kleur + ';') + '">&#9679; ' + esc(mp.naam) + '</button>';
+      var sub = t.dagen + (t.dagen === 1 ? ' dag' : ' dagen') + (o.terug ? ' · terug ' + DAGDEEL[o.terug] : '');
+      var status = o.ok
+        ? '<span class="chip" style="background:' + kleurVoor(o.wie||"") + ';color:#fff;">✓ ' + (o.wie ? esc(o.wie) : 'Geregeld') + '</span>'
+        : '<span class="chip oranje">Oppas?</span>';
+      var open = openTrip === t.van;
+      var body = "";
+      if(open){
+        var chips = "";
+        for(var mi=0; mi<state.rooster.mensen.length; mi++){
+          var mp = state.rooster.mensen[mi];
+          var az = o.wie && o.wie.trim().toLowerCase() === mp.naam.toLowerCase();
+          chips += '<button class="mens-chip" data-k="' + t.van + '" data-naam="' + esc(mp.naam) + '" style="' + (az ? 'background:' + mp.kleur + ';border-color:' + mp.kleur + ';color:#fff;' : 'color:' + mp.kleur + ';border-color:' + mp.kleur + ';') + '">&#9679; ' + esc(mp.naam) + '</button>';
+        }
+        if(chips) chips = '<div class="mens-chips">' + chips + '</div>';
+        var wiePh = state.rooster.mensen.length ? 'Of typ een nieuwe naam' : 'Wie past op ' + esc(state.profiel.naam || "Buddy") + '?';
+        var sel = '<select class="trip-wie trip-terug" data-k="' + t.van + '">' +
+                    '<option value=""' + (!o.terug ? ' selected' : '') + '>Terug: nog niet bekend</option>' +
+                    ['och','mid','av','nacht'].map(function(dd){
+                      return '<option value="' + dd + '"' + (o.terug === dd ? ' selected' : '') + '>Terug ' + DAGDEEL[dd] + '</option>';
+                    }).join('') +
+                  '</select>';
+        body = '<div class="trip-body">' +
+                 '<input class="trip-wie trip-best" data-k="' + t.van + '" placeholder="Waarheen? bv. New York" value="' + esc(o.best||"") + '">' +
+                 chips +
+                 '<input class="trip-wie" data-k="' + t.van + '" placeholder="' + wiePh + '" value="' + esc(o.wie||"") + '">' +
+                 sel +
+               '</div>';
       }
-      if(chips) chips = '<div class="mens-chips">' + chips + '</div>';
-      var wiePh = state.rooster.mensen.length ? 'Of typ een nieuwe naam' : 'Wie past op ' + esc(naam) + '?';
-      h += '<div class="trip-blok">' +
-             '<div class="trip-top"><div>' +
-               '<div class="vac-naam">' + titel + '</div>' +
-               '<div class="vac-sub">' + sub + '</div>' +
-             '</div>' +
-             (o.ok
-               ? '<button class="chip chip-knop trip-ok" data-k="' + t.van + '" style="background:' + kleurVoor(o.wie||"") + ';color:#fff;">✓ ' + (o.wie ? esc(o.wie) : 'Geregeld') + '</button>'
-               : '<button class="chip oranje chip-knop trip-ok" data-k="' + t.van + '">Nog geen oppas</button>') + '</div>' +
-             '<input class="trip-wie trip-best" data-k="' + t.van + '" placeholder="Waarheen? bv. New York" value="' + esc(o.best||"") + '">' +
-             chips +
-             '<input class="trip-wie" data-k="' + t.van + '" placeholder="' + wiePh + '" value="' + esc(o.wie||"") + '">' +
-             sel +
+      h += '<div class="trip-blok' + (open ? ' open' : '') + '">' +
+             '<div class="trip-kop" data-open="' + t.van + '">' +
+               '<div style="flex:1;"><div class="vac-naam">' + titel + '</div>' +
+               '<div class="vac-sub">' + sub + '</div></div>' + status +
+             '</div>' + body +
            '</div>';
     }
     el.innerHTML = h;
@@ -1784,6 +1806,8 @@
   function tekenMensen(){
     var el = $("mensen-lijst"); if(!el) return;
     var m = state.rooster.mensen;
+    var tg = $("mensen-toggle");
+    if(tg) tg.textContent = "👥 Oppassers beheren" + (m.length ? " (" + m.length + ")" : "");
     if(!m.length){
       el.innerHTML = '<div class="leeg-tekst">Nog geen oppassers — typ een naam bij een vlucht en die verschijnt hier vanzelf.</div>';
       return;
@@ -1899,29 +1923,43 @@
     }
     var wieInp = e.target.closest(".trip-wie");
     if(wieInp && !e.target.closest(".trip-best") && !e.target.closest(".trip-terug")){
-      registreer(wieInp.value);
+      var kW = wieInp.dataset.k;
+      var oW = state.rooster.oppas[kW] || {};
+      oW.wie = wieInp.value;
+      oW.ok = !!wieInp.value.trim();
+      if(oW.ok) registreer(oW.wie);
+      state.rooster.oppas[kW] = oW;
     }
     if(e.target.closest(".trip-best") || wieInp){
       bewaar(); tekenRooster(); tekenVlucht();
     }
   });
   $("trips-lijst").addEventListener("click", function(e){
+    if(e.target.closest(".trip-wie") || e.target.closest(".trip-terug")) return;
     var mc = e.target.closest(".mens-chip");
     if(mc){
       var kk2 = mc.dataset.k;
       var oo2 = state.rooster.oppas[kk2] || {};
       var nm = mc.dataset.naam;
-      oo2.wie = (oo2.wie && oo2.wie.trim().toLowerCase() === nm.toLowerCase()) ? "" : nm;
+      var was = oo2.wie && oo2.wie.trim().toLowerCase() === nm.toLowerCase();
+      oo2.wie = was ? "" : nm;
+      oo2.ok = !was;
       state.rooster.oppas[kk2] = oo2;
+      if(!was) openTrip = null;
       bewaar(); tekenRooster(); tekenVlucht();
       return;
     }
-    var b = e.target.closest(".trip-ok"); if(!b) return;
-    var k = b.dataset.k;
-    var o = state.rooster.oppas[k] || {wie:"", ok:false};
-    o.ok = !o.ok;
-    state.rooster.oppas[k] = o;
-    bewaar(); tekenRooster(); tekenVlucht();
+    var kop = e.target.closest(".trip-kop");
+    if(kop){
+      openTrip = (openTrip === kop.dataset.open) ? null : kop.dataset.open;
+      tekenTrips();
+      return;
+    }
+  });
+
+  $("mensen-toggle").addEventListener("click", function(){
+    var mk = $("mensen-kaart");
+    mk.style.display = (mk.style.display === "none") ? "block" : "none";
   });
   $("mensen-lijst").addEventListener("click", function(e){
     var st2 = e.target.closest(".mens-stip");
