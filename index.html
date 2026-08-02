@@ -18,6 +18,7 @@
     --ink:#22201C; --paper:#FBF8F2; --kaart:#FFFFFF; --line:#E3DCCD;
     --ochtend:#C8842B; --avond:#3E5C4B; --alarm:#A63A2B; --soft:#6E675C;
     --pas:#2F4A5C;
+    --vlieg:#0032A0;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html{-webkit-text-size-adjust:100%;}
@@ -40,7 +41,7 @@
   }
   .tabs button{
     flex:1;min-height:44px;border:none;background:transparent;border-radius:9px;
-    font-family:inherit;font-size:12px;font-weight:700;color:var(--soft);cursor:pointer;padding:0 1px;
+    font-family:inherit;font-size:11px;font-weight:700;color:var(--soft);cursor:pointer;padding:0 1px;
   }
   .tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper);}
   .paneel{display:none;} .paneel.actief{display:block;}
@@ -191,6 +192,23 @@
   .volg-rij{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:baseline;font-size:14.5px;}
   .volg-rij:last-child{border-bottom:none;}
   .volg-datum{font-weight:800;min-width:92px;}
+  .kal-kop{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .kal-kop .titel{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:18px;text-transform:capitalize;}
+  #vlucht-label,#rooster-werk{color:var(--vlieg);}
+  .kal-nav{width:40px;height:40px;flex:none;border:2px solid var(--ink);border-radius:50%;background:var(--paper);font-size:18px;font-weight:800;color:var(--ink);cursor:pointer;line-height:1;}
+  .kal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .kal .wd{font-size:10.5px;font-weight:800;color:var(--soft);text-align:center;padding:2px 0;letter-spacing:.05em;}
+  .kal button{aspect-ratio:1;border:2px solid var(--line);border-radius:9px;background:var(--kaart);font-family:inherit;font-size:13.5px;font-weight:700;color:var(--ink);cursor:pointer;padding:0;}
+  .kal button.leeg{visibility:hidden;}
+  .kal button.weg{background:var(--vlieg);border-color:var(--vlieg);color:#fff;}
+  .kal button.vandaag{border-color:var(--ochtend);border-width:3px;}
+  .trip-blok{padding:13px 0;border-bottom:1px solid var(--line);}
+  .trip-blok:last-child{border-bottom:none;}
+  .trip-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
+  .trip-wie{margin-top:7px;width:100%;min-height:40px;border:2px solid var(--line);border-radius:8px;padding:0 10px;font-family:inherit;font-size:14px;color:var(--ink);background:var(--paper);}
+  .trip-wie:focus{outline:none;border-color:var(--pas);}
+  .chip-knop{border:none;cursor:pointer;font-family:inherit;}
+  .link-knop{border:none;background:none;color:var(--pas);font-weight:800;font-size:12px;cursor:pointer;padding:0;font-family:inherit;text-decoration:underline;}
   .melding{
     position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom));
     background:var(--ink);color:var(--paper);padding:11px 20px;border-radius:24px;
@@ -215,6 +233,7 @@
     <button role="tab" aria-selected="false" data-p="eten">Eten</button>
     <button role="tab" aria-selected="false" data-p="gewicht">Gewicht</button>
     <button role="tab" aria-selected="false" data-p="gezond">Gezond</button>
+    <button role="tab" aria-selected="false" data-p="rooster">Rooster</button>
     <button role="tab" aria-selected="false" data-p="zorg">Tips</button>
   </div>
 
@@ -247,6 +266,7 @@
         <div class="veldrij"><label>Geboortedatum</label><input id="f-geboren" type="date"></div>
         <div class="veldrij"><label>Chipnummer</label><input id="f-chip" type="text" inputmode="numeric" placeholder="15 cijfers"></div>
         <div class="veldrij"><label>Dierenarts — telefoon</label><input id="f-arts" type="tel" placeholder="+32 ..."></div>
+        <div class="veldrij"><label>Airline / werkgever (optioneel)</label><input id="f-werk" type="text" placeholder="bv. Brussels Airlines"></div>
         <button class="knop" id="pas-opslaan">Opslaan</button>
       </div></div>
     </div>
@@ -256,6 +276,13 @@
       <div id="mp-nu" class="vac-naam" style="font-size:17px;">—</div>
       <div id="mp-info" class="vac-sub" style="font-size:13.5px;margin-top:3px;"></div>
       <div id="mp-volgende" class="voet" style="display:none;"></div>
+    </div></div>
+
+    <div class="kaart" id="vlucht-kaart" style="margin-top:14px;cursor:pointer;"><div class="body">
+      <div class="mini-label" id="vlucht-label">✈ Vluchten</div>
+      <div id="vlucht-status" class="vac-naam" style="font-size:16px;">—</div>
+      <div id="vlucht-sub" class="vac-sub2" style="margin-top:2px;"></div>
+      <div id="vlucht-voer" class="vac-sub2" style="display:none;color:var(--alarm);margin-top:2px;"></div>
     </div></div>
 
     <h2>Oppas</h2>
@@ -317,6 +344,7 @@
       <div class="mini-label">Nieuw voer toevoegen</div>
       <div class="veldrij"><label>Naam</label><input id="voer-naam" type="text" placeholder="bv. Royal Canin Puppy"></div>
       <div class="veldrij"><label>kcal per 100 g</label><input id="voer-kcal" type="number" inputmode="numeric" placeholder="staat op de verpakking"></div>
+      <div class="veldrij"><label>Inhoud verpakking in gram (optioneel)</label><input id="voer-zakg" type="number" inputmode="numeric" placeholder="bv. 14000 voor 14 kg"></div>
       <div class="veldrij"><label>Soort</label>
         <select id="voer-soort"><option value="droog">Droogvoer (brokjes)</option><option value="nat">Natvoer</option></select>
       </div>
@@ -463,6 +491,26 @@
     </div>
   </section>
 
+  <!-- ============ ROOSTER ============ -->
+  <section class="paneel" id="p-rooster">
+    <div class="kaart"><div class="body">
+      <div class="mini-label" id="rooster-werk" style="display:none;"></div>
+      <div class="kal-kop">
+        <button class="kal-nav" id="kal-vorige" aria-label="Vorige maand">&#8249;</button>
+        <span class="titel" id="kal-titel"></span>
+        <button class="kal-nav" id="kal-volgende" aria-label="Volgende maand">&#8250;</button>
+      </div>
+      <div class="kal" id="kal-grid"></div>
+      <p style="font-size:12.5px;color:var(--soft);margin-top:10px;">Tik op de dagen dat je vliegt. Donker = weg van huis.</p>
+    </div></div>
+
+    <div id="rooster-nudge" class="tip" style="display:none;"></div>
+
+    <h2>Vluchten &amp; oppas</h2>
+    <div class="kaart"><div class="body" id="trips-lijst"></div></div>
+    <button class="knop licht" id="rooster-deel">🔗 Deel de oppaslink</button>
+  </section>
+
   <!-- ============ ZORG ============ -->
   <section class="paneel" id="p-zorg">
     <h2>Waar je op let</h2>
@@ -556,7 +604,7 @@
   var MAANDEN = ["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
 
   var state = {
-    profiel: {naam:"Buddy", ras:"Franse bulldog", geboren:"", chip:"", arts:"", foto:""},
+    profiel: {naam:"Buddy", ras:"Franse bulldog", geboren:"", chip:"", arts:"", foto:"", werk:""},
     band: "jong",
     log: [],      // [{d:"2026-08-02", kg:11}]
     fotos: [],    // base64 strings
@@ -566,7 +614,8 @@
       {id:"v1", naam:"Hill's Puppy Medium", kcal100:374, soort:"droog", actief:true},
       {id:"v2", naam:"Butternut Box", kcal100:120, soort:"nat", actief:true}
     ],
-    oppas: {notities:""}
+    oppas: {notities:""},
+    rooster: {weg:{}, oppas:{}}
   };
   var KCAL_PER_G_REF = 3.74; // Hill's-referentie waarop de voedingstabel is gebaseerd
 
@@ -592,6 +641,7 @@
         if(d.gezondheid) state.gezondheid = Object.assign({vaccins:[],behandelingen:[],bezoeken:[]}, d.gezondheid);
         if(Array.isArray(d.voeding) && d.voeding.length) state.voeding = d.voeding;
         if(d.oppas) state.oppas = Object.assign({notities:""}, d.oppas);
+        if(d.rooster) state.rooster = Object.assign({weg:{},oppas:{}}, d.rooster);
         return;
       }
       // migratie van de oude versie
@@ -670,7 +720,7 @@
     var act = actieveVoeding(), per = [];
     for(var i=0;i<act.length;i++){
       var gDag = rond5((kcal / act.length) / (act[i].kcal100/100));
-      per.push({naam:act[i].naam, soort:act[i].soort, dag:gDag, maal:rond5(gDag/2)});
+      per.push({id:act[i].id, naam:act[i].naam, soort:act[i].soort, dag:gDag, maal:rond5(gDag/2)});
     }
     per.sort(function(a,b){ return a.soort===b.soort ? 0 : (a.soort==="droog" ? -1 : 1); });
     return {kg:kg, band:bandNu, per:per};
@@ -720,11 +770,22 @@
         oi.innerHTML = '<span style="color:var(--alarm);">Geen voer actief — zet bij Eten → Welk voer minstens één voer aan voordat je de link deelt.</span>';
       }
     }
-    tekenVoerLijst();
+    tekenVoerLijst(b.per);
   }
 
-  function tekenVoerLijst(){
+  function voorraadInfo(v, per){
+    if(!v.zak || !v.open) return null;
+    var pp = null;
+    for(var i=0;i<per.length;i++){ if(per[i].id === v.id){ pp = per[i]; break; } }
+    if(!pp || !pp.dag) return null;
+    var totaal = Math.floor(v.zak / pp.dag);
+    var gebruikt = Math.round((isoNaarDate(vandaag()) - isoNaarDate(v.open))/86400000);
+    return {rest: totaal - gebruikt, op: plusDagen(v.open, totaal)};
+  }
+
+  function tekenVoerLijst(per){
     var el = $("voer-lijst"); if(!el) return;
+    if(!per) per = portiesBerekenen().per;
     if(!state.voeding.length){
       el.innerHTML = '<div class="leeg-tekst">Nog geen voer — voeg hieronder toe.</div>';
       return;
@@ -732,9 +793,19 @@
     var h = "";
     for(var i=0;i<state.voeding.length;i++){
       var v = state.voeding[i];
+      var vr = "";
+      if(v.actief){
+        var inf = voorraadInfo(v, per);
+        if(inf){
+          var kleur = inf.rest <= 3 ? "var(--alarm)" : (inf.rest <= 7 ? "#9A6516" : "var(--soft)");
+          vr = '<div class="vac-sub2" style="color:' + kleur + ';">Nog ± ' + Math.max(0, inf.rest) + ' dagen · <button class="link-knop voer-zak" data-i="' + i + '">nieuwe zak gestart</button></div>';
+        } else {
+          vr = '<div class="vac-sub2"><button class="link-knop voer-voorraad" data-i="' + i + '">&#65291; voorraad bijhouden</button></div>';
+        }
+      }
       h += '<div class="vac-rij"><div style="flex:1;">' +
              '<div class="vac-naam">' + esc(v.naam) + '</div>' +
-             '<div class="vac-sub">' + (v.soort==="droog" ? "Droogvoer" : "Natvoer") + ' · ' + v.kcal100 + ' kcal per 100 g</div>' +
+             '<div class="vac-sub">' + (v.soort==="droog" ? "Droogvoer" : "Natvoer") + ' · ' + v.kcal100 + ' kcal per 100 g</div>' + vr +
            '</div>' +
            '<button class="knop licht klein voer-aan" data-i="' + i + '" style="width:auto;padding:0 12px;' + (v.actief ? 'background:var(--ink);color:var(--paper);' : '') + '">' + (v.actief ? "Aan" : "Uit") + '</button>' +
            '<button class="vac-wis voer-wis" data-i="' + i + '" aria-label="Verwijderen">&times;</button></div>';
@@ -1211,7 +1282,7 @@
       var n = (data.log||[]).length, f = (data.fotos||[]).length;
       if(!confirm("Backup terugzetten?\n" + n + " wegingen en " + f + " foto's.\nDe huidige gegevens op deze telefoon worden vervangen.")) return;
 
-      state.profiel = Object.assign({naam:"Buddy",ras:"Franse bulldog",geboren:"",chip:"",arts:"",foto:""}, data.profiel||{});
+      state.profiel = Object.assign({naam:"Buddy",ras:"Franse bulldog",geboren:"",chip:"",arts:"",foto:"",werk:""}, data.profiel||{});
       state.band = data.band || "jong";
       state.log = Array.isArray(data.log) ? data.log : [];
       state.fotos = Array.isArray(data.fotos) ? data.fotos : [];
@@ -1219,6 +1290,7 @@
       state.gezondheid = Object.assign({vaccins:[],behandelingen:[],bezoeken:[]}, data.gezondheid||{});
       if(Array.isArray(data.voeding) && data.voeding.length) state.voeding = data.voeding;
       state.oppas = Object.assign({notities:""}, data.oppas||{});
+      state.rooster = Object.assign({weg:{},oppas:{}}, data.rooster||{});
       var on = $("oppas-notities"); if(on) on.value = state.oppas.notities;
 
       bewaar(); tekenAlles();
@@ -1301,6 +1373,7 @@
     $("f-geboren").value = state.profiel.geboren;
     $("f-chip").value = state.profiel.chip;
     $("f-arts").value = state.profiel.arts;
+    $("f-werk").value = state.profiel.werk || "";
     f.style.display = "block";
     this.textContent = "Annuleren";
   });
@@ -1311,7 +1384,8 @@
     state.profiel.geboren = $("f-geboren").value;
     state.profiel.chip = $("f-chip").value.trim();
     state.profiel.arts = $("f-arts").value.trim();
-    bewaar(); tekenPas();
+    state.profiel.werk = $("f-werk").value.trim();
+    bewaar(); tekenPas(); tekenRooster(); tekenVlucht();
     $("pas-form").style.display = "none";
     $("pas-bewerk").textContent = "Gegevens aanpassen";
     melden("Opgeslagen");
@@ -1349,7 +1423,7 @@
   });
 
   /* ---------- start ---------- */
-  function tekenAlles(){ tekenPas(); tekenPorties(); tekenGewicht(); tekenFotos(); tekenBackup(); tekenGezondheid(); }
+  function tekenAlles(){ tekenPas(); tekenPorties(); tekenGewicht(); tekenFotos(); tekenBackup(); tekenGezondheid(); tekenRooster(); tekenVlucht(); }
 
   // vaccin-select vullen
   (function(){
@@ -1415,13 +1489,33 @@
     var kcal = parseFloat($("voer-kcal").value);
     if(!naam){ melden("Vul een naam in"); return; }
     if(isNaN(kcal) || kcal < 40 || kcal > 600){ melden("kcal per 100 g ligt meestal tussen 60 en 500"); return; }
-    state.voeding.push({id:"v"+Date.now(), naam:naam, kcal100:Math.round(kcal), soort:$("voer-soort").value, actief:true});
-    $("voer-naam").value = ""; $("voer-kcal").value = "";
+    var nv = {id:"v"+Date.now(), naam:naam, kcal100:Math.round(kcal), soort:$("voer-soort").value, actief:true};
+    var zakG = parseFloat($("voer-zakg").value);
+    if(!isNaN(zakG) && zakG >= 100 && zakG <= 30000){ nv.zak = Math.round(zakG); nv.open = vandaag(); }
+    state.voeding.push(nv);
+    $("voer-naam").value = ""; $("voer-kcal").value = ""; $("voer-zakg").value = "";
     bewaar(); tekenPorties();
     melden("Voer toegevoegd");
   });
 
   $("voer-lijst").addEventListener("click", function(e){
+    var zk = e.target.closest(".voer-zak");
+    if(zk){
+      state.voeding[+zk.dataset.i].open = vandaag();
+      bewaar(); tekenPorties(); tekenVlucht();
+      melden("Nieuwe zak gestart");
+      return;
+    }
+    var vv = e.target.closest(".voer-voorraad");
+    if(vv){
+      var vf = state.voeding[+vv.dataset.i];
+      var g = parseFloat(prompt("Hoeveel gram zit er in een volle verpakking van " + vf.naam + "?\nBijvoorbeeld: 14 kg = 14000"));
+      if(isNaN(g) || g < 100 || g > 30000){ if(!isNaN(g)) melden("Vul een aantal gram in (100 tot 30000)"); return; }
+      vf.zak = Math.round(g); vf.open = vandaag();
+      bewaar(); tekenPorties(); tekenVlucht();
+      melden("Voorraad wordt bijgehouden");
+      return;
+    }
     var aan = e.target.closest(".voer-aan");
     if(aan){
       var i = +aan.dataset.i;
@@ -1453,7 +1547,7 @@
     return location.origin + location.pathname + "#oppas=" + b64uEnc(JSON.stringify(d));
   }
 
-  $("oppas-deel").addEventListener("click", function(){
+  function deelOppas(){
     var url = oppasLink();
     var naam = state.profiel.naam || "Buddy";
     if(navigator.share){
@@ -1465,11 +1559,228 @@
       return;
     }
     prompt("Kopieer de link:", url);
-  });
+  }
+  $("oppas-deel").addEventListener("click", deelOppas);
+  $("rooster-deel").addEventListener("click", deelOppas);
 
   $("oppas-notities").addEventListener("input", function(){
     state.oppas.notities = this.value;
     bewaar();
+  });
+
+  /* ---------- rooster ---------- */
+  var MAAND_VOL = ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
+  var DAGDEEL = {och:"'s ochtends", mid:"'s middags", av:"'s avonds", nacht:"'s nachts"};
+  var nu0 = new Date();
+  var roosterJaar = nu0.getFullYear(), roosterMaand = nu0.getMonth();
+
+  function pad2(n){ return (n<10?"0":"") + n; }
+
+  function bouwTrips(){
+    var keys = Object.keys(state.rooster.weg).filter(function(k){ return state.rooster.weg[k]; }).sort();
+    var trips = [];
+    for(var i=0;i<keys.length;i++){
+      if(trips.length && plusDagen(trips[trips.length-1].tot, 1) === keys[i]){
+        trips[trips.length-1].tot = keys[i];
+      } else {
+        trips.push({van:keys[i], tot:keys[i]});
+      }
+    }
+    for(var j=0;j<trips.length;j++){
+      trips[j].dagen = Math.round((isoNaarDate(trips[j].tot) - isoNaarDate(trips[j].van))/86400000) + 1;
+    }
+    return trips;
+  }
+  function komendeTrips(){
+    var vd = vandaag();
+    return bouwTrips().filter(function(t){ return t.tot >= vd; });
+  }
+  function kort(iso){
+    var q = iso.split("-");
+    return parseInt(q[2],10) + " " + MAANDEN[parseInt(q[1],10)-1];
+  }
+  function tripLabel(t){
+    if(t.van === t.tot) return kort(t.van);
+    var a = t.van.split("-"), b = t.tot.split("-");
+    if(a[1] === b[1]) return parseInt(a[2],10) + "–" + kort(t.tot);
+    return kort(t.van) + " – " + kort(t.tot);
+  }
+
+  function tekenRooster(){
+    var titel = $("kal-titel"); if(!titel) return;
+    var rw = $("rooster-werk");
+    if(rw){
+      if(state.profiel.werk){ rw.style.display = "block"; rw.textContent = "✈ " + state.profiel.werk; }
+      else rw.style.display = "none";
+    }
+    titel.textContent = MAAND_VOL[roosterMaand] + " " + roosterJaar;
+    var eerste = new Date(roosterJaar, roosterMaand, 1);
+    var offset = (eerste.getDay()+6)%7;
+    var dagenIn = new Date(roosterJaar, roosterMaand+1, 0).getDate();
+    var wd = ["M","D","W","D","V","Z","Z"], h = "";
+    for(var i=0;i<7;i++) h += '<div class="wd">' + wd[i] + '</div>';
+    for(var o=0;o<offset;o++) h += '<button class="leeg" tabindex="-1"></button>';
+    var vd = vandaag();
+    for(var d=1; d<=dagenIn; d++){
+      var iso = roosterJaar + "-" + pad2(roosterMaand+1) + "-" + pad2(d);
+      var cls = [];
+      if(state.rooster.weg[iso]) cls.push("weg");
+      if(iso === vd) cls.push("vandaag");
+      h += '<button class="' + cls.join(" ") + '" data-d="' + iso + '">' + d + '</button>';
+    }
+    $("kal-grid").innerHTML = h;
+    tekenTrips();
+    roosterNudge();
+  }
+
+  function tekenTrips(){
+    var el = $("trips-lijst"); if(!el) return;
+    var trips = komendeTrips();
+    if(!trips.length){
+      el.innerHTML = '<div class="leeg-tekst">Nog geen vluchten aangetikt.</div>';
+      return;
+    }
+    var naam = state.profiel.naam || "Buddy", h = "";
+    for(var i=0;i<trips.length;i++){
+      var t = trips[i];
+      var o = state.rooster.oppas[t.van] || {};
+      var titel = tripLabel(t) + (o.best ? " · " + esc(o.best) : "");
+      var sub = t.dagen + (t.dagen === 1 ? ' dag' : ' dagen') + ' weg' + (o.terug ? ' · terug ' + DAGDEEL[o.terug] : '');
+      var sel = '<select class="trip-wie trip-terug" data-k="' + t.van + '">' +
+                  '<option value=""' + (!o.terug ? ' selected' : '') + '>Terug: nog niet bekend</option>' +
+                  ['och','mid','av','nacht'].map(function(dd){
+                    return '<option value="' + dd + '"' + (o.terug === dd ? ' selected' : '') + '>Terug ' + DAGDEEL[dd] + '</option>';
+                  }).join('') +
+                '</select>';
+      h += '<div class="trip-blok">' +
+             '<div class="trip-top"><div>' +
+               '<div class="vac-naam">' + titel + '</div>' +
+               '<div class="vac-sub">' + sub + '</div>' +
+             '</div>' +
+             '<button class="chip ' + (o.ok ? 'groen' : 'oranje') + ' chip-knop trip-ok" data-k="' + t.van + '">' + (o.ok ? '✓ Geregeld' : 'Nog geen oppas') + '</button></div>' +
+             '<input class="trip-wie trip-best" data-k="' + t.van + '" placeholder="Waarheen? bv. New York" value="' + esc(o.best||"") + '">' +
+             '<input class="trip-wie" data-k="' + t.van + '" placeholder="Wie past op ' + esc(naam) + '?" value="' + esc(o.wie||"") + '">' +
+             sel +
+           '</div>';
+    }
+    el.innerHTML = h;
+  }
+
+  function roosterNudge(){
+    var el = $("rooster-nudge"); if(!el) return;
+    var nu = new Date();
+    if(nu.getDate() < 13){ el.style.display = "none"; return; }
+    var nm = new Date(nu.getFullYear(), nu.getMonth()+1, 1);
+    var prefix = nm.getFullYear() + "-" + pad2(nm.getMonth()+1);
+    var heeft = Object.keys(state.rooster.weg).some(function(k){ return k.indexOf(prefix) === 0 && state.rooster.weg[k]; });
+    if(heeft){ el.style.display = "none"; return; }
+    el.style.display = "block";
+    el.innerHTML = '<b>Nieuw rooster binnen?</b> Rond de 15e komt het rooster van ' + MAAND_VOL[nm.getMonth()] + '. Vul je vliegdagen in zodra je het hebt.';
+  }
+
+  function tekenVlucht(){
+    var st = $("vlucht-status"); if(!st) return;
+    var vl = $("vlucht-label");
+    if(vl) vl.textContent = "✈ " + (state.profiel.werk || "Vluchten");
+    var sub = $("vlucht-sub");
+    var trips = komendeTrips();
+    var vwEl = $("vlucht-voer");
+    if(vwEl) vwEl.style.display = "none";
+    if(!trips.length){
+      st.textContent = "Geen vluchten ingepland";
+      sub.textContent = "Tik hier om je rooster in te vullen.";
+      sub.style.color = "";
+      return;
+    }
+    var t = trips[0], o = state.rooster.oppas[t.van] || {};
+    var vd = vandaag();
+    if(t.van <= vd){
+      st.textContent = "Nu " + (o.best ? "in " + o.best : "onderweg") + " — terug op " + kort(t.tot) + (o.terug ? " " + DAGDEEL[o.terug] : "");
+    } else {
+      var dgn = Math.round((isoNaarDate(t.van) - isoNaarDate(vd))/86400000);
+      st.textContent = kort(t.van) + (o.best ? " · " + o.best : "") + " · over " + dgn + (dgn === 1 ? " dag" : " dagen");
+    }
+    if(o.ok){
+      sub.textContent = "Oppas geregeld" + (o.wie ? ": " + o.wie : "") + " ✓";
+      sub.style.color = "#3E5C4B";
+    } else {
+      sub.textContent = "⚠ Nog geen oppas geregeld";
+      sub.style.color = "var(--alarm)";
+    }
+    if(vwEl){
+      var perV = portiesBerekenen().per;
+      for(var fv=0; fv<state.voeding.length; fv++){
+        var fd = state.voeding[fv];
+        if(!fd.actief) continue;
+        var infV = voorraadInfo(fd, perV);
+        if(infV && infV.op <= t.tot){
+          vwEl.style.display = "block";
+          vwEl.textContent = "⚠ " + fd.naam + " raakt op rond " + kort(infV.op) + " — regel voer vóór vertrek.";
+          break;
+        }
+      }
+    }
+  }
+
+  $("kal-vorige").addEventListener("click", function(){
+    roosterMaand--; if(roosterMaand < 0){ roosterMaand = 11; roosterJaar--; }
+    tekenRooster();
+  });
+  $("kal-volgende").addEventListener("click", function(){
+    roosterMaand++; if(roosterMaand > 11){ roosterMaand = 0; roosterJaar++; }
+    tekenRooster();
+  });
+  $("kal-grid").addEventListener("click", function(e){
+    var b = e.target.closest("button[data-d]"); if(!b) return;
+    var iso = b.dataset.d;
+    if(state.rooster.weg[iso]) delete state.rooster.weg[iso];
+    else state.rooster.weg[iso] = 1;
+    bewaar(); tekenRooster(); tekenVlucht();
+  });
+  $("trips-lijst").addEventListener("input", function(e){
+    var k, o;
+    var best = e.target.closest(".trip-best");
+    if(best){
+      k = best.dataset.k;
+      o = state.rooster.oppas[k] || {};
+      o.best = best.value;
+      state.rooster.oppas[k] = o;
+      bewaar();
+      return;
+    }
+    if(e.target.classList && e.target.classList.contains("trip-terug")) return;
+    var inp = e.target.closest(".trip-wie"); if(!inp) return;
+    k = inp.dataset.k;
+    o = state.rooster.oppas[k] || {};
+    o.wie = inp.value;
+    state.rooster.oppas[k] = o;
+    bewaar();
+  });
+  $("trips-lijst").addEventListener("change", function(e){
+    var sel = e.target.closest(".trip-terug");
+    if(sel){
+      var k = sel.dataset.k;
+      var o = state.rooster.oppas[k] || {};
+      o.terug = sel.value;
+      state.rooster.oppas[k] = o;
+      bewaar(); tekenTrips(); tekenVlucht();
+      return;
+    }
+    if(e.target.closest(".trip-best") || e.target.closest(".trip-wie")){
+      tekenTrips(); tekenVlucht();
+    }
+  });
+  $("trips-lijst").addEventListener("click", function(e){
+    var b = e.target.closest(".trip-ok"); if(!b) return;
+    var k = b.dataset.k;
+    var o = state.rooster.oppas[k] || {wie:"", ok:false};
+    o.ok = !o.ok;
+    state.rooster.oppas[k] = o;
+    bewaar(); tekenTrips(); tekenVlucht();
+  });
+  $("vlucht-kaart").addEventListener("click", function(){
+    var kn = document.querySelector('.tabs button[data-p="rooster"]');
+    if(kn) kn.click();
   });
 
   /* ---------- oppasweergave ---------- */
