@@ -205,6 +205,9 @@
   .trip-blok{padding:13px 0;border-bottom:1px solid var(--line);}
   .trip-blok:last-child{border-bottom:none;}
   .trip-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
+  .mens-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .mens-chip{border:2px solid;border-radius:99px;background:var(--paper);font-family:inherit;font-size:12.5px;font-weight:800;padding:6px 11px;cursor:pointer;}
+  .mens-stip{width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;flex:none;padding:0;}
   .trip-wie{margin-top:7px;width:100%;min-height:40px;border:2px solid var(--line);border-radius:8px;padding:0 10px;font-family:inherit;font-size:14px;color:var(--ink);background:var(--paper);}
   .trip-wie:focus{outline:none;border-color:var(--pas);}
   .chip-knop{border:none;cursor:pointer;font-family:inherit;}
@@ -504,13 +507,20 @@
         <button class="kal-nav" id="kal-volgende" aria-label="Volgende maand">&#8250;</button>
       </div>
       <div class="kal" id="kal-grid"></div>
-      <p style="font-size:12.5px;color:var(--soft);margin-top:10px;">Tik op de dagen dat je vliegt. Donker = weg van huis.</p>
+      <p style="font-size:12.5px;color:var(--soft);margin-top:10px;">Tik op de dagen dat je vliegt. Blauw = nog geen oppas, kleur = geregeld, schuin gevuld = die dag kom je terug.</p>
+      <div id="kal-legende" style="display:none;margin-top:6px;font-size:12.5px;font-weight:800;"></div>
     </div></div>
 
     <div id="rooster-nudge" class="tip" style="display:none;"></div>
 
     <h2>Vluchten &amp; oppas</h2>
     <div class="kaart"><div class="body" id="trips-lijst"></div></div>
+
+    <h2>Oppassers</h2>
+    <div class="kaart"><div class="body">
+      <div id="mensen-lijst"></div>
+      <p style="font-size:12.5px;color:var(--soft);margin-top:8px;">Tik op de stip om een andere kleur te kiezen. Nieuwe oppasser? Typ de naam gewoon bij een vlucht.</p>
+    </div></div>
     <button class="knop" id="rooster-vraag">📅 Vraag beschikbaarheid aan oppassers</button>
     <div style="height:8px;"></div>
     <button class="knop licht" id="rooster-deel">🍽 Deel de verzorgingsgids</button>
@@ -620,7 +630,7 @@
       {id:"v2", naam:"Butternut Box", kcal100:120, soort:"nat", actief:true}
     ],
     oppas: {notities:""},
-    rooster: {weg:{}, oppas:{}}
+    rooster: {weg:{}, oppas:{}, mensen:[]}
   };
   var KCAL_PER_G_REF = 3.74; // Hill's-referentie waarop de voedingstabel is gebaseerd
 
@@ -654,7 +664,8 @@
         if(d.gezondheid) state.gezondheid = Object.assign({vaccins:[],behandelingen:[],bezoeken:[]}, d.gezondheid);
         if(Array.isArray(d.voeding) && d.voeding.length) state.voeding = d.voeding;
         if(d.oppas) state.oppas = Object.assign({notities:""}, d.oppas);
-        if(d.rooster) state.rooster = Object.assign({weg:{},oppas:{}}, d.rooster);
+        if(d.rooster) state.rooster = Object.assign({weg:{},oppas:{},mensen:[]}, d.rooster);
+        migrMensen();
         var med = null;
         try{ med = JSON.parse(localStorage.getItem("buddy.v2.media") || "null"); }catch(e2){}
         if(med){
@@ -1311,7 +1322,8 @@
       state.gezondheid = Object.assign({vaccins:[],behandelingen:[],bezoeken:[]}, data.gezondheid||{});
       if(Array.isArray(data.voeding) && data.voeding.length) state.voeding = data.voeding;
       state.oppas = Object.assign({notities:""}, data.oppas||{});
-      state.rooster = Object.assign({weg:{},oppas:{}}, data.rooster||{});
+      state.rooster = Object.assign({weg:{},oppas:{},mensen:[]}, data.rooster||{});
+      migrMensen();
       var on = $("oppas-notities"); if(on) on.value = state.oppas.notities;
 
       bewaarMedia(); bewaar(); tekenAlles();
@@ -1592,6 +1604,46 @@
   /* ---------- rooster ---------- */
   var MAAND_VOL = ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
   var DAGDEEL = {och:"'s ochtends", mid:"'s middags", av:"'s avonds", nacht:"'s nachts"};
+  var SITTER_PALET = ["#3E8E5A","#8A4FBF","#D4557A","#1FA0A8","#C86A2B","#6B7F2E","#B03A3A","#7A4A2B"];
+  function sitterKleur(naam){
+    var s = 0;
+    for(var i=0;i<naam.length;i++) s += naam.charCodeAt(i);
+    return SITTER_PALET[s % SITTER_PALET.length];
+  }
+  function vindMens(naam){
+    naam = (naam || "").trim();
+    if(!naam) return null;
+    var m = state.rooster.mensen;
+    for(var i=0;i<m.length;i++){ if(m[i].naam.toLowerCase() === naam.toLowerCase()) return m[i]; }
+    return null;
+  }
+  function vrijeKleur(){
+    var gebruikt = {};
+    for(var i=0;i<state.rooster.mensen.length;i++) gebruikt[state.rooster.mensen[i].kleur] = 1;
+    for(var j=0;j<SITTER_PALET.length;j++){ if(!gebruikt[SITTER_PALET[j]]) return SITTER_PALET[j]; }
+    return SITTER_PALET[state.rooster.mensen.length % SITTER_PALET.length];
+  }
+  function registreer(naam){
+    naam = (naam || "").trim();
+    if(!naam) return null;
+    var m = vindMens(naam);
+    if(m) return m;
+    m = {naam:naam, kleur:vrijeKleur()};
+    state.rooster.mensen.push(m);
+    return m;
+  }
+  function kleurVoor(naam){
+    var m = vindMens(naam);
+    return m ? m.kleur : sitterKleur(naam || "");
+  }
+  function migrMensen(){
+    if(!Array.isArray(state.rooster.mensen)) state.rooster.mensen = [];
+    if(state.rooster.mensen.length) return;
+    for(var k in state.rooster.oppas){
+      var ow = (state.rooster.oppas[k] || {}).wie;
+      if(ow) registreer(ow);
+    }
+  }
   var nu0 = new Date();
   var roosterJaar = nu0.getFullYear(), roosterMaand = nu0.getMonth();
 
@@ -1642,15 +1694,46 @@
     for(var i=0;i<7;i++) h += '<div class="wd">' + wd[i] + '</div>';
     for(var o=0;o<offset;o++) h += '<button class="leeg" tabindex="-1"></button>';
     var vd = vandaag();
+    var kleurVan = {}, legende = {}, halve = {};
+    var alleTrips = bouwTrips();
+    for(var ti=0; ti<alleTrips.length; ti++){
+      var tr = alleTrips[ti], oo = state.rooster.oppas[tr.van] || {};
+      if(oo.terug === "och" || oo.terug === "mid") halve[tr.tot] = true;
+      if(!oo.ok) continue;
+      var kl = kleurVoor(oo.wie || "");
+      legende[oo.wie || "Geregeld"] = kl;
+      for(var dd = tr.van; dd <= tr.tot; dd = plusDagen(dd, 1)) kleurVan[dd] = kl;
+    }
     for(var d=1; d<=dagenIn; d++){
       var iso = roosterJaar + "-" + pad2(roosterMaand+1) + "-" + pad2(d);
       var cls = [];
       if(state.rooster.weg[iso]) cls.push("weg");
       if(iso === vd) cls.push("vandaag");
-      h += '<button class="' + cls.join(" ") + '" data-d="' + iso + '">' + d + '</button>';
+      var stl = "";
+      if(state.rooster.weg[iso]){
+        var kkl = kleurVan[iso] || "";
+        if(halve[iso]){
+          var basis = kkl || "var(--vlieg)";
+          stl = ' style="background:linear-gradient(135deg,' + basis + ' 0 46%,var(--kaart) 46% 100%);border-color:' + basis + ';color:var(--ink);"';
+        } else if(kkl){
+          stl = ' style="background:' + kkl + ';border-color:' + kkl + ';color:#fff;"';
+        }
+      }
+      h += '<button class="' + cls.join(" ") + '" data-d="' + iso + '"' + stl + '>' + d + '</button>';
     }
     $("kal-grid").innerHTML = h;
+    var lg = $("kal-legende");
+    if(lg){
+      var namen = Object.keys(legende);
+      if(namen.length){
+        lg.style.display = "block";
+        lg.innerHTML = namen.map(function(nm){
+          return '<span style="color:' + legende[nm] + ';margin-right:12px;white-space:nowrap;">&#9679; ' + esc(nm) + '</span>';
+        }).join("");
+      } else lg.style.display = "none";
+    }
     tekenTrips();
+    tekenMensen();
     roosterNudge();
   }
 
@@ -1673,16 +1756,43 @@
                     return '<option value="' + dd + '"' + (o.terug === dd ? ' selected' : '') + '>Terug ' + DAGDEEL[dd] + '</option>';
                   }).join('') +
                 '</select>';
+      var chips = "";
+      for(var mi=0; mi<state.rooster.mensen.length; mi++){
+        var mp = state.rooster.mensen[mi];
+        var az = o.wie && o.wie.trim().toLowerCase() === mp.naam.toLowerCase();
+        chips += '<button class="mens-chip" data-k="' + t.van + '" data-naam="' + esc(mp.naam) + '" style="' + (az ? 'background:' + mp.kleur + ';border-color:' + mp.kleur + ';color:#fff;' : 'color:' + mp.kleur + ';border-color:' + mp.kleur + ';') + '">&#9679; ' + esc(mp.naam) + '</button>';
+      }
+      if(chips) chips = '<div class="mens-chips">' + chips + '</div>';
+      var wiePh = state.rooster.mensen.length ? 'Of typ een nieuwe naam' : 'Wie past op ' + esc(naam) + '?';
       h += '<div class="trip-blok">' +
              '<div class="trip-top"><div>' +
                '<div class="vac-naam">' + titel + '</div>' +
                '<div class="vac-sub">' + sub + '</div>' +
              '</div>' +
-             '<button class="chip ' + (o.ok ? 'groen' : 'oranje') + ' chip-knop trip-ok" data-k="' + t.van + '">' + (o.ok ? '✓ Geregeld' : 'Nog geen oppas') + '</button></div>' +
+             (o.ok
+               ? '<button class="chip chip-knop trip-ok" data-k="' + t.van + '" style="background:' + kleurVoor(o.wie||"") + ';color:#fff;">✓ ' + (o.wie ? esc(o.wie) : 'Geregeld') + '</button>'
+               : '<button class="chip oranje chip-knop trip-ok" data-k="' + t.van + '">Nog geen oppas</button>') + '</div>' +
              '<input class="trip-wie trip-best" data-k="' + t.van + '" placeholder="Waarheen? bv. New York" value="' + esc(o.best||"") + '">' +
-             '<input class="trip-wie" data-k="' + t.van + '" placeholder="Wie past op ' + esc(naam) + '?" value="' + esc(o.wie||"") + '">' +
+             chips +
+             '<input class="trip-wie" data-k="' + t.van + '" placeholder="' + wiePh + '" value="' + esc(o.wie||"") + '">' +
              sel +
            '</div>';
+    }
+    el.innerHTML = h;
+  }
+
+  function tekenMensen(){
+    var el = $("mensen-lijst"); if(!el) return;
+    var m = state.rooster.mensen;
+    if(!m.length){
+      el.innerHTML = '<div class="leeg-tekst">Nog geen oppassers — typ een naam bij een vlucht en die verschijnt hier vanzelf.</div>';
+      return;
+    }
+    var h = "";
+    for(var i=0;i<m.length;i++){
+      h += '<div class="vac-rij"><button class="mens-stip" data-i="' + i + '" aria-label="Kleur veranderen" style="background:' + m[i].kleur + ';"></button>' +
+           '<div style="flex:1;"><div class="vac-naam">' + esc(m[i].naam) + '</div></div>' +
+           '<button class="vac-wis mens-wis" data-i="' + i + '" aria-label="Verwijderen">&times;</button></div>';
     }
     el.innerHTML = h;
   }
@@ -1784,21 +1894,58 @@
       var o = state.rooster.oppas[k] || {};
       o.terug = sel.value;
       state.rooster.oppas[k] = o;
-      bewaar(); tekenTrips(); tekenVlucht();
+      bewaar(); tekenRooster(); tekenVlucht();
       return;
     }
-    if(e.target.closest(".trip-best") || e.target.closest(".trip-wie")){
-      tekenTrips(); tekenVlucht();
+    var wieInp = e.target.closest(".trip-wie");
+    if(wieInp && !e.target.closest(".trip-best") && !e.target.closest(".trip-terug")){
+      registreer(wieInp.value);
+    }
+    if(e.target.closest(".trip-best") || wieInp){
+      bewaar(); tekenRooster(); tekenVlucht();
     }
   });
   $("trips-lijst").addEventListener("click", function(e){
+    var mc = e.target.closest(".mens-chip");
+    if(mc){
+      var kk2 = mc.dataset.k;
+      var oo2 = state.rooster.oppas[kk2] || {};
+      var nm = mc.dataset.naam;
+      oo2.wie = (oo2.wie && oo2.wie.trim().toLowerCase() === nm.toLowerCase()) ? "" : nm;
+      state.rooster.oppas[kk2] = oo2;
+      bewaar(); tekenRooster(); tekenVlucht();
+      return;
+    }
     var b = e.target.closest(".trip-ok"); if(!b) return;
     var k = b.dataset.k;
     var o = state.rooster.oppas[k] || {wie:"", ok:false};
     o.ok = !o.ok;
     state.rooster.oppas[k] = o;
-    bewaar(); tekenTrips(); tekenVlucht();
+    bewaar(); tekenRooster(); tekenVlucht();
   });
+  $("mensen-lijst").addEventListener("click", function(e){
+    var st2 = e.target.closest(".mens-stip");
+    if(st2){
+      var mi2 = +st2.dataset.i, mm2 = state.rooster.mensen[mi2];
+      var idx = SITTER_PALET.indexOf(mm2.kleur);
+      var inGebruik = {};
+      for(var z=0;z<state.rooster.mensen.length;z++){ if(z !== mi2) inGebruik[state.rooster.mensen[z].kleur] = 1; }
+      for(var stp=1; stp<=SITTER_PALET.length; stp++){
+        var kand = SITTER_PALET[(idx + stp + SITTER_PALET.length) % SITTER_PALET.length];
+        if(!inGebruik[kand] || stp === SITTER_PALET.length){ mm2.kleur = kand; break; }
+      }
+      bewaar(); tekenRooster(); tekenVlucht();
+      return;
+    }
+    var wis2 = e.target.closest(".mens-wis");
+    if(wis2){
+      var mj = +wis2.dataset.i;
+      if(!confirm(state.rooster.mensen[mj].naam + " verwijderen uit je oppassers?")) return;
+      state.rooster.mensen.splice(mj,1);
+      bewaar(); tekenRooster(); tekenVlucht();
+    }
+  });
+
   $("vlucht-kaart").addEventListener("click", function(){
     var kn = document.querySelector('.tabs button[data-p="rooster"]');
     if(kn) kn.click();
@@ -1832,7 +1979,7 @@
   }
   $("rooster-vraag").addEventListener("click", deelVraag);
 
-  var DAGDEEL_EN = {och:"back in the morning", mid:"back in the afternoon", av:"back in the evening", nacht:"back at night"};
+  var DAGDEEL_EN = {och:"in the morning", mid:"in the afternoon", av:"in the evening", nacht:"at night"};
   var MND_EN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
   function vraagBoot(){
@@ -1842,9 +1989,11 @@
     try{ d = JSON.parse(b64uDec(hsh.slice(7))); }catch(e){ return false; }
     if(!d || !Array.isArray(d.t)) return false;
 
-    var taal = "nl", naamW = "", keuze = {};
+    var taal = "nl", naamW = "", keuze = {}, opm = "";
+    var fotoSrc = "";
+    try{ var fe = document.getElementById("pas-foto"); if(fe) fotoSrc = fe.getAttribute("src") || ""; }catch(e0){}
 
-    function lbl(t, en){
+    function lbl(t, en, metTerug){
       var M = en ? MND_EN : MAANDEN;
       function k(iso){ var q = iso.split("-"); return parseInt(q[2],10) + " " + M[parseInt(q[1],10)-1]; }
       var s;
@@ -1852,8 +2001,13 @@
       else if(t[0].slice(0,7) === t[1].slice(0,7)) s = parseInt(t[0].split("-")[2],10) + "–" + k(t[1]);
       else s = k(t[0]) + " – " + k(t[1]);
       if(t[2]) s += " · " + t[2];
-      if(t[3]) s += en ? " · " + (DAGDEEL_EN[t[3]]||"") : " · terug " + (DAGDEEL[t[3]]||"");
+      if(metTerug !== false && t[3]) s += en ? " · back " + (DAGDEEL_EN[t[3]]||"") : " · terug " + (DAGDEEL[t[3]]||"");
       return s;
+    }
+    function lblThuis(t, en){
+      var M = en ? MND_EN : MAANDEN;
+      var q = t[1].split("-");
+      return parseInt(q[2],10) + " " + M[parseInt(q[1],10)-1] + " " + (en ? (DAGDEEL_EN[t[3]]||"") : (DAGDEEL[t[3]]||""));
     }
 
     var TAAL = {
@@ -1861,6 +2015,8 @@
         titel:"Wanneer kan jij op " + esc(d.n) + " passen?",
         sub:"Vink aan welke periodes voor jou lukken en stuur je antwoord terug.",
         naam:"Jouw naam", stuur:"📤 Stuur je antwoord",
+        opm:"Vraag of opmerking (optioneel)",
+        thuis:"🕐 Oppassen tot:",
         kan:"Ik kan op " + d.n + " passen op:",
         geen:"Ik kan helaas op geen van deze data.",
         hoi:function(w){ return "Hoi! " + (w ? "Ik ben " + w + " " : "") + "👋"; }
@@ -1869,6 +2025,8 @@
         titel:"When could you look after " + esc(d.n) + "?",
         sub:"Tick the periods that work for you and send your answer back.",
         naam:"Your name", stuur:"📤 Send your answer",
+        opm:"Question or comment (optional)",
+        thuis:"🕐 Sitting until:",
         kan:"I can look after " + d.n + " on:",
         geen:"Unfortunately none of these dates work for me.",
         hoi:function(w){ return "Hi! " + (w ? "I'm " + w + " " : "") + "👋"; }
@@ -1878,7 +2036,9 @@
     function stuur(){
       var T = TAAL[taal], sel = [];
       for(var i=0;i<d.t.length;i++){ if(keuze[i]) sel.push(lbl(d.t[i], taal === "en")); }
-      var txt = T.hoi(naamW.trim()) + "\n" + (sel.length ? T.kan + "\n• " + sel.join("\n• ") : T.geen) + "\n🐾";
+      var txt = T.hoi(naamW.trim()) + "\n" + (sel.length ? T.kan + "\n• " + sel.join("\n• ") : T.geen);
+      if(opm.trim()) txt += "\n💬 " + opm.trim();
+      txt += "\n🐾";
       if(navigator.share){ navigator.share({text:txt}).catch(function(){}); return; }
       if(navigator.clipboard && navigator.clipboard.writeText){
         navigator.clipboard.writeText(txt).then(function(){ melden(taal==="en" ? "Copied — paste it in WhatsApp" : "Gekopieerd — plak het in WhatsApp"); }).catch(function(){ prompt("", txt); });
@@ -1890,7 +2050,8 @@
     function render(){
       var T = TAAL[taal], rijen = "";
       for(var i=0;i<d.t.length;i++){
-        rijen += '<label class="vraag-rij"><input type="checkbox" data-i="' + i + '"' + (keuze[i] ? ' checked' : '') + '><span>' + lbl(d.t[i], taal === "en") + '</span></label>';
+        var thuisRegel = d.t[i][3] ? '<div class="vac-sub" style="margin-top:2px;">' + T.thuis + ' <b>' + lblThuis(d.t[i], taal === "en") + '</b></div>' : '';
+        rijen += '<label class="vraag-rij"><input type="checkbox" data-i="' + i + '"' + (keuze[i] ? ' checked' : '') + '><span><div>' + lbl(d.t[i], taal === "en", false) + '</div>' + thuisRegel + '</span></label>';
       }
       document.querySelector(".app").innerHTML =
         '<header style="text-align:center;">' +
@@ -1898,11 +2059,13 @@
             '<button class="knop licht klein" id="t-nl" style="width:auto;padding:0 18px;' + (taal==="nl" ? 'background:var(--ink);color:var(--paper);' : '') + '">NL</button>' +
             '<button class="knop licht klein" id="t-en" style="width:auto;padding:0 18px;' + (taal==="en" ? 'background:var(--ink);color:var(--paper);' : '') + '">EN</button>' +
           '</div>' +
+          (fotoSrc ? '<img src="' + fotoSrc + '" alt="" style="width:104px;height:104px;border-radius:50%;object-fit:cover;border:4px solid var(--ink);display:block;margin:0 auto 12px;">' : '') +
           '<div class="naam" style="font-size:28px;">' + T.titel + '</div>' +
           '<div class="sub">' + T.sub + '</div>' +
         '</header>' +
         '<div class="kaart"><div class="body">' +
           '<div class="veldrij"><label>' + T.naam + '</label><input id="vr-naam" type="text" value="' + esc(naamW) + '"></div>' +
+          '<div class="veldrij"><label>' + T.opm + '</label><textarea id="vr-opm" rows="2">' + esc(opm) + '</textarea></div>' +
           rijen +
           '<div style="height:12px;"></div>' +
           '<button class="knop" id="vr-stuur">' + T.stuur + '</button>' +
@@ -1911,6 +2074,7 @@
       document.getElementById("t-nl").addEventListener("click", function(){ taal = "nl"; render(); });
       document.getElementById("t-en").addEventListener("click", function(){ taal = "en"; render(); });
       document.getElementById("vr-naam").addEventListener("input", function(){ naamW = this.value; });
+      document.getElementById("vr-opm").addEventListener("input", function(){ opm = this.value; });
       document.getElementById("vr-stuur").addEventListener("click", stuur);
       var boxes = document.querySelectorAll(".vraag-rij input");
       Array.prototype.forEach.call(boxes, function(b){
@@ -1966,6 +2130,8 @@
     var d;
     try{ d = JSON.parse(b64uDec(hsh.slice(7))); }catch(e){ return false; }
     var taal = "nl", ovKcal = "";
+    var fotoSrc2 = "";
+    try{ var fe2 = document.getElementById("pas-foto"); if(fe2) fotoSrc2 = fe2.getAttribute("src") || ""; }catch(e0){}
     function ovHerbereken(){
       var uit = document.getElementById("ov-uit"), gEl = document.getElementById("ov-g");
       if(!uit || !gEl) return;
@@ -1990,6 +2156,7 @@
             '<button class="knop licht klein" id="t-nl" style="width:auto;padding:0 18px;' + (taal==="nl" ? 'background:var(--ink);color:var(--paper);' : '') + '">NL</button>' +
             '<button class="knop licht klein" id="t-en" style="width:auto;padding:0 18px;' + (taal==="en" ? 'background:var(--ink);color:var(--paper);' : '') + '">EN</button>' +
           '</div>' +
+          (fotoSrc2 ? '<img src="' + fotoSrc2 + '" alt="" style="width:104px;height:104px;border-radius:50%;object-fit:cover;border:4px solid var(--ink);display:block;margin:0 auto 12px;">' : '') +
           '<div class="naam">' + T.titel + ' ' + esc(d.n) + '</div>' +
           '<div class="sub">' + esc(d.r||"") + ' — ' + T.sub + '</div>' +
         '</header>' +
