@@ -208,6 +208,9 @@
   .trip-wie{margin-top:7px;width:100%;min-height:40px;border:2px solid var(--line);border-radius:8px;padding:0 10px;font-family:inherit;font-size:14px;color:var(--ink);background:var(--paper);}
   .trip-wie:focus{outline:none;border-color:var(--pas);}
   .chip-knop{border:none;cursor:pointer;font-family:inherit;}
+  .vraag-rij{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);font-size:15px;align-items:center;cursor:pointer;}
+  .vraag-rij:last-of-type{border-bottom:none;}
+  .vraag-rij input{width:24px;height:24px;flex:none;accent-color:var(--vlieg);}
   .link-knop{border:none;background:none;color:var(--pas);font-weight:800;font-size:12px;cursor:pointer;padding:0;font-family:inherit;text-decoration:underline;}
   .melding{
     position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom));
@@ -289,7 +292,7 @@
     <div class="kaart"><div class="body">
       <div class="veldrij"><label>Notities voor de oppas</label><textarea id="oppas-notities" rows="3" placeholder="bv. bang voor de stofzuiger, slaapt in de bench"></textarea></div>
       <p id="oppas-inhoud" style="font-size:13px;font-weight:600;margin-bottom:10px;"></p>
-      <button class="knop" id="oppas-deel">🔗 Deel de oppaslink</button>
+      <button class="knop" id="oppas-deel">🍽 Deel de verzorgingsgids</button>
       <p style="font-size:12.5px;color:var(--soft);margin-top:10px;">
         Stuur deze link via WhatsApp aan wie op <span id="oppas-naam">Buddy</span> past. Alles staat erin — eten, regels, noodnummers — in het Nederlands of Engels. Niets meer uitleggen dus.
       </p>
@@ -508,7 +511,9 @@
 
     <h2>Vluchten &amp; oppas</h2>
     <div class="kaart"><div class="body" id="trips-lijst"></div></div>
-    <button class="knop licht" id="rooster-deel">🔗 Deel de oppaslink</button>
+    <button class="knop" id="rooster-vraag">📅 Vraag beschikbaarheid aan oppassers</button>
+    <div style="height:8px;"></div>
+    <button class="knop licht" id="rooster-deel">🍽 Deel de verzorgingsgids</button>
   </section>
 
   <!-- ============ ZORG ============ -->
@@ -622,11 +627,19 @@
   function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
   /* ---------- opslag ---------- */
+  function kernState(){
+    var kopie = {};
+    for(var k in state){ if(k !== "fotos" && k !== "profiel") kopie[k] = state[k]; }
+    kopie.profiel = Object.assign({}, state.profiel, {foto:""});
+    kopie.fotos = [];
+    return kopie;
+  }
   function bewaar(){
-    try{ localStorage.setItem("buddy.v2", JSON.stringify(state)); }catch(e){
-      melden("Opslag vol — verwijder een foto");
-    }
-    try{ if(window.storage && window.storage.set){ window.storage.set("buddy.v2", JSON.stringify(state)).catch(function(){}); } }catch(e){}
+    try{ localStorage.setItem("buddy.v2", JSON.stringify(kernState())); }catch(e){ melden("Opslag vol"); }
+  }
+  function bewaarMedia(){
+    try{ localStorage.setItem("buddy.v2.media", JSON.stringify({fotos:state.fotos, pf:state.profiel.foto})); }
+    catch(e){ melden("Opslag vol — verwijder een foto"); }
   }
   function laad(){
     try{
@@ -642,6 +655,14 @@
         if(Array.isArray(d.voeding) && d.voeding.length) state.voeding = d.voeding;
         if(d.oppas) state.oppas = Object.assign({notities:""}, d.oppas);
         if(d.rooster) state.rooster = Object.assign({weg:{},oppas:{}}, d.rooster);
+        var med = null;
+        try{ med = JSON.parse(localStorage.getItem("buddy.v2.media") || "null"); }catch(e2){}
+        if(med){
+          if(Array.isArray(med.fotos)) state.fotos = med.fotos;
+          if(med.pf) state.profiel.foto = med.pf;
+        } else if(state.fotos.length || state.profiel.foto){
+          bewaarMedia(); bewaar(); // migratie: foto's apart opslaan
+        }
         return;
       }
       // migratie van de oude versie
@@ -765,7 +786,7 @@
       if(b.per.length){
         var namen = [];
         for(var n2=0;n2<b.per.length;n2++) namen.push(b.per[n2].naam);
-        oi.innerHTML = 'In de oppaslink: <b>' + esc(namen.join(" + ")) + '</b>. Ander voer? Pas het aan bij Eten → Welk voer en deel de link opnieuw.';
+        oi.innerHTML = 'In de verzorgingsgids: <b>' + esc(namen.join(" + ")) + '</b>. Ander voer? Pas het aan bij Eten → Welk voer en deel de gids opnieuw.';
       } else {
         oi.innerHTML = '<span style="color:var(--alarm);">Geen voer actief — zet bij Eten → Welk voer minstens één voer aan voordat je de link deelt.</span>';
       }
@@ -1293,7 +1314,7 @@
       state.rooster = Object.assign({weg:{},oppas:{}}, data.rooster||{});
       var on = $("oppas-notities"); if(on) on.value = state.oppas.notities;
 
-      bewaar(); tekenAlles();
+      bewaarMedia(); bewaar(); tekenAlles();
       var l0 = laatste(); if(l0) $("gewicht").value = l0.kg;
       Array.prototype.forEach.call(document.querySelectorAll("#leeftijd button"), function(b){
         var aan = b.dataset.band === state.band;
@@ -1401,7 +1422,7 @@
     verkleinFoto(f, function(data){
       state.fotos.unshift(data);
       if(!state.profiel.foto) state.profiel.foto = data;
-      bewaar(); tekenFotos(); tekenPas();
+      bewaarMedia(); bewaar(); tekenFotos(); tekenPas();
       melden("Foto toegevoegd");
     });
   });
@@ -1410,7 +1431,7 @@
     var s = e.target.closest(".ster");
     if(s){
       state.profiel.foto = state.fotos[+s.dataset.s];
-      bewaar(); tekenFotos(); tekenPas();
+      bewaarMedia(); bewaar(); tekenFotos(); tekenPas();
       melden("Profielfoto ingesteld");
       return;
     }
@@ -1419,7 +1440,7 @@
     if(!confirm("Deze foto verwijderen?")) return;
     var weg = state.fotos.splice(i,1)[0];
     if(state.profiel.foto === weg) state.profiel.foto = state.fotos[0] || "";
-    bewaar(); tekenFotos(); tekenPas();
+    bewaarMedia(); bewaar(); tekenFotos(); tekenPas();
   });
 
   /* ---------- start ---------- */
@@ -1783,6 +1804,124 @@
     if(kn) kn.click();
   });
 
+  /* ---------- beschikbaarheid vragen ---------- */
+  function vraagLink(){
+    var trips = komendeTrips().slice(0, 10);
+    var lijst = [];
+    for(var i=0;i<trips.length;i++){
+      var o = state.rooster.oppas[trips[i].van] || {};
+      lijst.push([trips[i].van, trips[i].tot, o.best||"", o.terug||""]);
+    }
+    var d = {v:1, n:state.profiel.naam||"Buddy", t:lijst};
+    return location.origin + location.pathname + "#vraag=" + b64uEnc(JSON.stringify(d));
+  }
+
+  function deelVraag(){
+    if(!komendeTrips().length){ melden("Geen komende vluchten om te delen"); return; }
+    var url = vraagLink();
+    var naam = state.profiel.naam || "Buddy";
+    if(navigator.share){
+      navigator.share({title:"Oppas gezocht voor " + naam, text:"Wanneer kan jij op " + naam + " passen? Vul het hier in:", url:url}).catch(function(){});
+      return;
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(function(){ melden("Link gekopieerd"); }).catch(function(){ prompt("Kopieer de link:", url); });
+      return;
+    }
+    prompt("Kopieer de link:", url);
+  }
+  $("rooster-vraag").addEventListener("click", deelVraag);
+
+  var DAGDEEL_EN = {och:"back in the morning", mid:"back in the afternoon", av:"back in the evening", nacht:"back at night"};
+  var MND_EN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  function vraagBoot(){
+    var hsh = location.hash || "";
+    if(hsh.indexOf("#vraag=") !== 0) return false;
+    var d;
+    try{ d = JSON.parse(b64uDec(hsh.slice(7))); }catch(e){ return false; }
+    if(!d || !Array.isArray(d.t)) return false;
+
+    var taal = "nl", naamW = "", keuze = {};
+
+    function lbl(t, en){
+      var M = en ? MND_EN : MAANDEN;
+      function k(iso){ var q = iso.split("-"); return parseInt(q[2],10) + " " + M[parseInt(q[1],10)-1]; }
+      var s;
+      if(t[0] === t[1]) s = k(t[0]);
+      else if(t[0].slice(0,7) === t[1].slice(0,7)) s = parseInt(t[0].split("-")[2],10) + "–" + k(t[1]);
+      else s = k(t[0]) + " – " + k(t[1]);
+      if(t[2]) s += " · " + t[2];
+      if(t[3]) s += en ? " · " + (DAGDEEL_EN[t[3]]||"") : " · terug " + (DAGDEEL[t[3]]||"");
+      return s;
+    }
+
+    var TAAL = {
+      nl: {
+        titel:"Wanneer kan jij op " + esc(d.n) + " passen?",
+        sub:"Vink aan welke periodes voor jou lukken en stuur je antwoord terug.",
+        naam:"Jouw naam", stuur:"📤 Stuur je antwoord",
+        kan:"Ik kan op " + d.n + " passen op:",
+        geen:"Ik kan helaas op geen van deze data.",
+        hoi:function(w){ return "Hoi! " + (w ? "Ik ben " + w + " " : "") + "👋"; }
+      },
+      en: {
+        titel:"When could you look after " + esc(d.n) + "?",
+        sub:"Tick the periods that work for you and send your answer back.",
+        naam:"Your name", stuur:"📤 Send your answer",
+        kan:"I can look after " + d.n + " on:",
+        geen:"Unfortunately none of these dates work for me.",
+        hoi:function(w){ return "Hi! " + (w ? "I'm " + w + " " : "") + "👋"; }
+      }
+    };
+
+    function stuur(){
+      var T = TAAL[taal], sel = [];
+      for(var i=0;i<d.t.length;i++){ if(keuze[i]) sel.push(lbl(d.t[i], taal === "en")); }
+      var txt = T.hoi(naamW.trim()) + "\n" + (sel.length ? T.kan + "\n• " + sel.join("\n• ") : T.geen) + "\n🐾";
+      if(navigator.share){ navigator.share({text:txt}).catch(function(){}); return; }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(function(){ melden(taal==="en" ? "Copied — paste it in WhatsApp" : "Gekopieerd — plak het in WhatsApp"); }).catch(function(){ prompt("", txt); });
+        return;
+      }
+      prompt("", txt);
+    }
+
+    function render(){
+      var T = TAAL[taal], rijen = "";
+      for(var i=0;i<d.t.length;i++){
+        rijen += '<label class="vraag-rij"><input type="checkbox" data-i="' + i + '"' + (keuze[i] ? ' checked' : '') + '><span>' + lbl(d.t[i], taal === "en") + '</span></label>';
+      }
+      document.querySelector(".app").innerHTML =
+        '<header style="text-align:center;">' +
+          '<div style="display:flex;justify-content:center;gap:6px;margin-bottom:14px;">' +
+            '<button class="knop licht klein" id="t-nl" style="width:auto;padding:0 18px;' + (taal==="nl" ? 'background:var(--ink);color:var(--paper);' : '') + '">NL</button>' +
+            '<button class="knop licht klein" id="t-en" style="width:auto;padding:0 18px;' + (taal==="en" ? 'background:var(--ink);color:var(--paper);' : '') + '">EN</button>' +
+          '</div>' +
+          '<div class="naam" style="font-size:28px;">' + T.titel + '</div>' +
+          '<div class="sub">' + T.sub + '</div>' +
+        '</header>' +
+        '<div class="kaart"><div class="body">' +
+          '<div class="veldrij"><label>' + T.naam + '</label><input id="vr-naam" type="text" value="' + esc(naamW) + '"></div>' +
+          rijen +
+          '<div style="height:12px;"></div>' +
+          '<button class="knop" id="vr-stuur">' + T.stuur + '</button>' +
+        '</div></div>' +
+        '<footer>Buddy-app</footer>';
+      document.getElementById("t-nl").addEventListener("click", function(){ taal = "nl"; render(); });
+      document.getElementById("t-en").addEventListener("click", function(){ taal = "en"; render(); });
+      document.getElementById("vr-naam").addEventListener("input", function(){ naamW = this.value; });
+      document.getElementById("vr-stuur").addEventListener("click", stuur);
+      var boxes = document.querySelectorAll(".vraag-rij input");
+      Array.prototype.forEach.call(boxes, function(b){
+        b.addEventListener("change", function(){ keuze[+this.dataset.i] = this.checked; });
+      });
+      window.scrollTo(0,0);
+    }
+    render();
+    return true;
+  }
+
   /* ---------- oppasweergave ---------- */
   var OPPAS_TAAL = {
     nl: {
@@ -1896,7 +2035,7 @@
     if(f) importeer(f);
   });
 
-  if(oppasBoot()) return;
+  if(oppasBoot() || vraagBoot()) return;
 
   laad();
   $("oppas-notities").value = state.oppas.notities || "";
