@@ -148,6 +148,11 @@
     position:absolute;top:5px;right:5px;width:26px;height:26px;border:none;border-radius:50%;
     background:rgba(34,32,28,.72);color:#fff;font-size:15px;cursor:pointer;line-height:26px;padding:0;
   }
+  .galerij .vak .ster{
+    position:absolute;bottom:5px;left:5px;width:26px;height:26px;border:none;border-radius:50%;
+    background:rgba(34,32,28,.72);color:#fff;font-size:13px;cursor:pointer;line-height:26px;padding:0;
+  }
+  .galerij .vak .ster.actief{background:#C8842B;}
   .leeg-tekst{text-align:center;color:var(--soft);font-size:14px;padding:22px 10px;}
 
   ol.stappen{counter-reset:s;list-style:none;}
@@ -246,26 +251,31 @@
       </div></div>
     </div>
 
+    <div class="kaart" style="margin-top:14px;"><div class="body">
+      <div class="mini-label">Waar <span id="mp-naam">Buddy</span> nu zit</div>
+      <div id="mp-nu" class="vac-naam" style="font-size:17px;">—</div>
+      <div id="mp-info" class="vac-sub" style="font-size:13.5px;margin-top:3px;"></div>
+      <div id="mp-volgende" class="voet" style="display:none;"></div>
+    </div></div>
+
+    <h2>Oppas</h2>
+    <div class="kaart"><div class="body">
+      <div class="veldrij"><label>Notities voor de oppas</label><textarea id="oppas-notities" rows="3" placeholder="bv. bang voor de stofzuiger, slaapt in de bench"></textarea></div>
+      <button class="knop" id="oppas-deel">🔗 Deel de oppaslink</button>
+      <p style="font-size:12.5px;color:var(--soft);margin-top:10px;">
+        Stuur deze link via WhatsApp aan wie op <span id="oppas-naam">Buddy</span> past. Alles staat erin — eten, regels, noodnummers — in het Nederlands of Engels. Niets meer uitleggen dus.
+      </p>
+    </div></div>
+
     <h2>Foto's van Buddy</h2>
     <div class="galerij" id="galerij"></div>
     <div class="leeg-tekst" id="galerij-leeg">Nog geen foto's. Voeg er een toe met de knop hieronder.</div>
     <button class="knop licht" id="foto-knop">📷 Foto toevoegen</button>
     <input type="file" id="foto-input" accept="image/*">
     <p style="font-size:12.5px;color:var(--soft);margin-top:9px;text-align:center;">
-      Maximaal 9 foto's. Ze blijven op deze telefoon staan — maak dus af en toe een backup hieronder.
+      Maximaal 9 foto's. Tik op de ster om de profielfoto te kiezen. Maak af en toe een backup (onderaan bij Tips).
     </p>
 
-    <h2>Backup</h2>
-    <div class="kaart"><div class="body">
-      <p id="backup-status" style="font-size:14px;margin-bottom:12px;">Nog geen backup gemaakt.</p>
-      <button class="knop" id="backup-maken">Backup maken</button>
-      <div style="height:8px;"></div>
-      <button class="knop licht" id="backup-terug">Backup terugzetten</button>
-      <input type="file" id="backup-input" accept="application/json,.json">
-      <p style="font-size:12.5px;color:var(--soft);margin-top:10px;">
-        Alles — gegevens, wegingen en foto's — gaat in één bestand. Bewaar het in iCloud Drive (app Bestanden) of stuur het naar jezelf op WhatsApp. <b>Nieuwe telefoon?</b> Open de app daar en zet de backup terug.
-      </p>
-    </div></div>
   </section>
 
   <!-- ============ ETEN ============ -->
@@ -280,8 +290,7 @@
     <div class="kaart ochtend">
       <div class="kop"><span>Ochtend</span><span>± 8:00</span></div>
       <div class="body">
-        <div class="portie"><span class="g" id="k-och">68</span><span class="wat">gram brokjes</span></div>
-        <div class="portie"><span class="g" id="b-och">150</span><span class="wat">gram Butternut Box</span></div>
+        <div id="maal-och"></div>
         <div class="voet"><b>+ <span id="olie">7,5</span> ml zalmolie</b> — fles eerst schudden.<br>Alles goed door elkaar mengen.</div>
       </div>
     </div>
@@ -289,18 +298,29 @@
     <div class="kaart avond">
       <div class="kop"><span>Avond</span><span>± 19:00</span></div>
       <div class="body">
-        <div class="portie"><span class="g" id="k-av">68</span><span class="wat">gram brokjes</span></div>
-        <div class="portie"><span class="g" id="b-av">150</span><span class="wat">gram Butternut Box</span></div>
+        <div id="maal-av"></div>
         <div class="voet"><b>Geen olie</b> — die zit al in de ochtend.<br>Even op kamertemperatuur laten komen.</div>
       </div>
     </div>
 
     <div class="kaart"><div class="body">
       <div class="mini-label">Per dag in totaal</div>
-      <div class="portie"><span class="g" id="k-dag">135</span><span class="wat">gram brokjes</span></div>
-      <div class="portie"><span class="g" id="b-dag">300</span><span class="wat">gram Butternut · <span id="b-zakjes">1 zakje</span></span></div>
+      <div id="dag-lijst"></div>
       <div class="portie"><span class="g" id="olie2">7,5</span><span class="wat">ml zalmolie</span></div>
       <div class="voet">Vers water de hele dag beschikbaar.</div>
+    </div></div>
+
+    <h2>Welk voer</h2>
+    <div class="kaart"><div class="body" id="voer-lijst"></div></div>
+    <div class="kaart"><div class="body">
+      <div class="mini-label">Nieuw voer toevoegen</div>
+      <div class="veldrij"><label>Naam</label><input id="voer-naam" type="text" placeholder="bv. Royal Canin Puppy"></div>
+      <div class="veldrij"><label>kcal per 100 g</label><input id="voer-kcal" type="number" inputmode="numeric" placeholder="staat op de verpakking"></div>
+      <div class="veldrij"><label>Soort</label>
+        <select id="voer-soort"><option value="droog">Droogvoer (brokjes)</option><option value="nat">Natvoer</option></select>
+      </div>
+      <button class="knop licht klein" id="voer-toevoegen">Toevoegen</button>
+      <p style="font-size:12.5px;color:var(--soft);margin-top:9px;">Staat er alleen kcal per kg op de zak? Deel door 10. Bijvoorbeeld: 3740 kcal/kg = 374 per 100 g.</p>
     </div></div>
 
     <h2>Goed mengen</h2>
@@ -308,6 +328,7 @@
       <li>Brokjes en natvoer <b>helemaal door elkaar</b> roeren, niet in laagjes. Anders eet hij alleen het natte deel.</li>
       <li>Laat hij brokjes liggen? Een beetje warm water erdoor maakt ze zachter en geuriger.</li>
       <li>Voeg <b>niets extra's</b> toe om hem te verleiden — geen kaas, vlees of restjes van tafel.</li>
+      <li><b>Snoepjes tellen mee:</b> maximaal 10% van de dagcalorieën. Veel beloond vandaag? Maak de maaltijden iets kleiner.</li>
     </ul>
 
     <h2>De 15-minuten-regel</h2>
@@ -340,6 +361,7 @@
     <div class="grafiek" id="grafiek-blok" style="display:none;">
       <div class="mini-label">Verloop</div>
       <svg id="grafiek" viewBox="0 0 320 130" preserveAspectRatio="none" aria-label="Gewichtsverloop"></svg>
+      <div id="grafiek-legende" style="display:none;font-size:11.5px;color:var(--soft);margin-top:6px;">Grijze zone: typisch gewicht van een Franse bulldog op die leeftijd (teefjes zitten iets lager).</div>
     </div>
 
     <div class="kaart"><div class="body">
@@ -361,9 +383,11 @@
 
     <div class="kaart"><div class="body">
       <div class="mini-label">Leeftijdsgroep voor de porties</div>
+      <div id="band-auto" style="display:none;font-size:14px;font-weight:600;"></div>
       <div style="display:flex;gap:8px;" id="leeftijd">
-        <button class="knop licht klein" data-band="jong" aria-pressed="true">4 – 9 mnd</button>
-        <button class="knop licht klein" data-band="oud" aria-pressed="false">10 – 12 mnd</button>
+        <button class="knop licht klein" data-band="jong" aria-pressed="true">4–9 mnd</button>
+        <button class="knop licht klein" data-band="oud" aria-pressed="false">10–12</button>
+        <button class="knop licht klein" data-band="volwassen" aria-pressed="false">12+</button>
       </div>
     </div></div>
 
@@ -446,6 +470,7 @@
       <li><b>Slappe ontlasting:</b> minder olie geven en het rustig weer opbouwen.</li>
       <li><b>Te snel eten:</b> anti-schrokbak of plat bord. Franse bulldogs slikken veel lucht in.</li>
       <li><b>Rust:</b> een pup van deze leeftijd slaapt nog 16–18 uur per dag. Laat hem met rust als hij ligt.</li>
+      <li><b>Bewegen:</b> vuistregel voor pups: ± 5 minuten stevig wandelen per levensmaand, twee keer per dag. Rustig vrij spelen mag altijd.</li>
     </ul>
 
     <h2>Franse bulldog — extra aandacht</h2>
@@ -472,6 +497,18 @@
       <li>Restjes van tafel, hoe zielig hij ook kijkt.</li>
     </ul>
 
+    <h2>Backup</h2>
+    <div class="kaart"><div class="body">
+      <p id="backup-status" style="font-size:14px;margin-bottom:12px;">Nog geen backup gemaakt.</p>
+      <button class="knop" id="backup-maken">Backup maken</button>
+      <div style="height:8px;"></div>
+      <button class="knop licht" id="backup-terug">Backup terugzetten</button>
+      <input type="file" id="backup-input" accept="application/json,.json">
+      <p style="font-size:12.5px;color:var(--soft);margin-top:10px;">
+        Alles — gegevens, wegingen en foto's — gaat in één bestand. Bewaar het in iCloud Drive (app Bestanden) of stuur het naar jezelf op WhatsApp. <b>Nieuwe telefoon?</b> Open de app daar en zet de backup terug.
+      </p>
+    </div></div>
+
     <footer>
       Porties berekend met de voedingstabel van Hill's Science Plan Puppy Medium, met de helft van de calorieën vervangen door Butternut Box. Bij twijfel over gewicht, groei of gezondheid: bel de dierenarts.
     </footer>
@@ -487,8 +524,33 @@
 
   var TABEL = {
     jong: [[5,150],[10,255],[15,345],[20,430]],
-    oud:  [[5,120],[10,205],[15,275],[20,345],[25,405]]
+    oud:  [[5,120],[10,205],[15,275],[20,345],[25,405]],
+    volwassen: [[5,100],[10,165],[15,220],[20,270],[25,320]]
   };
+  var BAND_LABEL = {jong:"4–9 maanden (puppy)", oud:"10–12 maanden (puppy)", volwassen:"volwassen (12+ maanden)"};
+  var CURVE = [[2,2.0,3.5],[3,3.5,5.5],[4,5.0,7.0],[5,6.5,8.5],[6,7.5,9.5],[8,8.5,11.0],[10,9.5,12.0],[12,10.0,13.0],[18,10.5,13.5],[24,10.5,14.0]];
+  var MIJLPALEN = [
+    {vanM:2,  t:"Socialisatie",   info:"De belangrijkste weken: laat hem rustig en positief kennismaken met mensen, honden, verkeer en geluiden."},
+    {vanM:4,  t:"Tandenwissel",   info:"Melktanden vallen uit — geef iets stevigs om op te kauwen en controleer het gebit af en toe."},
+    {vanM:6,  t:"Puberteit",      info:"Hij test de regels en lijkt commando's te 'vergeten'. Normaal — blijf rustig en consequent, ook met de 15-minuten-regel."},
+    {vanM:11, t:"Bijna volwassen", info:"Plan de overstap naar volwassenvoer: meng vanaf de eerste verjaardag 7 dagen lang steeds meer volwassenvoer door het puppyvoer. Bespreek ook castratie of sterilisatie met de dierenarts."},
+    {vanM:12, t:"Volwassen",      info:"Volgroeid rond 12–18 maanden. Twee maaltijden per dag blijft prima; let vooral op het gewicht — Franse bulldogs worden snel te zwaar."}
+  ];
+
+  function leeftijdMaanden(){
+    var g = state.profiel.geboren; if(!g) return null;
+    var d = isoNaarDate(g), n = new Date();
+    var m = (n.getFullYear()-d.getFullYear())*12 + (n.getMonth()-d.getMonth());
+    if(n.getDate() < d.getDate()) m--;
+    return m < 0 ? null : m;
+  }
+  function effectieveBand(){
+    var m = leeftijdMaanden();
+    if(m === null) return state.band;
+    if(m >= 12) return "volwassen";
+    if(m >= 10) return "oud";
+    return "jong";
+  }
   var FACTOR = 2.18;
   var MAANDEN = ["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
 
@@ -498,8 +560,16 @@
     log: [],      // [{d:"2026-08-02", kg:11}]
     fotos: [],    // base64 strings
     meta: {laatsteBackup: null},
-    gezondheid: {vaccins:[], behandelingen:[], bezoeken:[]}
+    gezondheid: {vaccins:[], behandelingen:[], bezoeken:[]},
+    voeding: [
+      {id:"v1", naam:"Hill's Puppy Medium", kcal100:374, soort:"droog", actief:true},
+      {id:"v2", naam:"Butternut Box", kcal100:120, soort:"nat", actief:true}
+    ],
+    oppas: {notities:""}
   };
+  var KCAL_PER_G_REF = 3.74; // Hill's-referentie waarop de voedingstabel is gebaseerd
+
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
   /* ---------- opslag ---------- */
   function bewaar(){
@@ -519,6 +589,8 @@
         if(Array.isArray(d.fotos)) state.fotos = d.fotos;
         if(d.meta) state.meta = d.meta;
         if(d.gezondheid) state.gezondheid = Object.assign({vaccins:[],behandelingen:[],bezoeken:[]}, d.gezondheid);
+        if(Array.isArray(d.voeding) && d.voeding.length) state.voeding = d.voeding;
+        if(d.oppas) state.oppas = Object.assign({notities:""}, d.oppas);
         return;
       }
       // migratie van de oude versie
@@ -584,22 +656,78 @@
     if(Math.abs(z-1) < 0.08) return "1 zakje";
     return nl(Math.round(z*4)/4) + " zakje";
   }
-  function tekenPorties(){
+  function dagKcal(kg, band){ return interpoleer(kg, TABEL[band]) * KCAL_PER_G_REF; }
+  function actieveVoeding(){
+    return state.voeding.filter(function(v){ return v.actief && v.kcal100 > 0; });
+  }
+  function portiesBerekenen(){
     var l = laatste();
     var kg = l ? l.kg : 11;
     if(kg > 25) kg = 25;
-    var vol  = interpoleer(kg, TABEL[state.band]);
-    var brok = rond5(vol/2);
-    var butt = rond5((vol/2)*FACTOR);
-    var olie = kg < 12 ? "7,5" : (kg < 20 ? "10" : "15");
+    var bandNu = effectieveBand();
+    var kcal = dagKcal(kg, bandNu);
+    var act = actieveVoeding(), per = [];
+    for(var i=0;i<act.length;i++){
+      var gDag = rond5((kcal / act.length) / (act[i].kcal100/100));
+      per.push({naam:act[i].naam, soort:act[i].soort, dag:gDag, maal:rond5(gDag/2)});
+    }
+    per.sort(function(a,b){ return a.soort===b.soort ? 0 : (a.soort==="droog" ? -1 : 1); });
+    return {kg:kg, band:bandNu, per:per};
+  }
 
-    $("eten-kg").textContent = nl(kg) + " kg";
+  function tekenPorties(){
+    var b = portiesBerekenen();
+    var l = laatste();
+    var auto = leeftijdMaanden() !== null;
+    var ba = $("band-auto"), lfEl = $("leeftijd");
+    if(ba && lfEl){
+      if(auto){
+        ba.style.display = "block";
+        ba.textContent = "Automatisch op basis van de geboortedatum: " + BAND_LABEL[b.band] +
+          (b.band === "volwassen" ? ". Richtwaarden — controleer de tabel op de zak volwassenvoer." : ".");
+        lfEl.style.display = "none";
+      } else {
+        ba.style.display = "none";
+        lfEl.style.display = "flex";
+      }
+    }
+
+    var olie = b.kg < 12 ? "7,5" : (b.kg < 20 ? "10" : "15");
+    $("eten-kg").textContent = nl(b.kg) + " kg";
     $("eten-wanneer").textContent = l ? "Gewogen op " + toonDatum(l.d) : "Nog niet gewogen — standaardwaarde";
-    $("k-och").textContent = rond5(brok/2);  $("k-av").textContent = rond5(brok/2);
-    $("b-och").textContent = rond5(butt/2);  $("b-av").textContent = rond5(butt/2);
-    $("k-dag").textContent = brok;           $("b-dag").textContent = butt;
-    $("b-zakjes").textContent = zakjes(butt);
-    $("olie").textContent = olie;            $("olie2").textContent = olie;
+
+    function rijen(veld){
+      if(!b.per.length) return '<div class="leeg-tekst" style="padding:6px 0;">Zet bij "Welk voer" minstens één voer aan.</div>';
+      var h = "";
+      for(var i=0;i<b.per.length;i++){
+        h += '<div class="portie"><span class="g">' + b.per[i][veld] + '</span><span class="wat">gram ' + esc(b.per[i].naam) + '</span></div>';
+      }
+      return h;
+    }
+    $("maal-och").innerHTML = rijen("maal");
+    $("maal-av").innerHTML  = rijen("maal");
+    $("dag-lijst").innerHTML = rijen("dag");
+    $("olie").textContent = olie; $("olie2").textContent = olie;
+    tekenVoerLijst();
+  }
+
+  function tekenVoerLijst(){
+    var el = $("voer-lijst"); if(!el) return;
+    if(!state.voeding.length){
+      el.innerHTML = '<div class="leeg-tekst">Nog geen voer — voeg hieronder toe.</div>';
+      return;
+    }
+    var h = "";
+    for(var i=0;i<state.voeding.length;i++){
+      var v = state.voeding[i];
+      h += '<div class="vac-rij"><div style="flex:1;">' +
+             '<div class="vac-naam">' + esc(v.naam) + '</div>' +
+             '<div class="vac-sub">' + (v.soort==="droog" ? "Droogvoer" : "Natvoer") + ' · ' + v.kcal100 + ' kcal per 100 g</div>' +
+           '</div>' +
+           '<button class="knop licht klein voer-aan" data-i="' + i + '" style="width:auto;padding:0 12px;' + (v.actief ? 'background:var(--ink);color:var(--paper);' : '') + '">' + (v.actief ? "Aan" : "Uit") + '</button>' +
+           '<button class="vac-wis voer-wis" data-i="' + i + '" aria-label="Verwijderen">&times;</button></div>';
+    }
+    el.innerHTML = h;
   }
 
   /* ---------- paspoort ---------- */
@@ -628,6 +756,29 @@
     vul("pas-arts", p.arts);
 
     if(p.foto) $("pas-foto").src = p.foto;
+
+    var on2 = $("oppas-naam"); if(on2) on2.textContent = p.naam || "Buddy";
+    var mm = leeftijdMaanden();
+    $("mp-naam").textContent = p.naam || "Buddy";
+    if(mm === null){
+      $("mp-nu").textContent = "Vul de geboortedatum in";
+      $("mp-info").textContent = "Dan zie je hier in welke fase hij zit en wat eraan komt.";
+      $("mp-volgende").style.display = "none";
+    } else {
+      var cur = MIJLPALEN[0], next = null;
+      for(var q=0;q<MIJLPALEN.length;q++){
+        if(mm >= MIJLPALEN[q].vanM) cur = MIJLPALEN[q];
+        else { next = MIJLPALEN[q]; break; }
+      }
+      $("mp-nu").textContent = cur.t + " · " + mm + " maanden";
+      $("mp-info").textContent = cur.info;
+      if(next){
+        $("mp-volgende").style.display = "block";
+        $("mp-volgende").innerHTML = "<b>Volgende fase:</b> " + next.t + " — vanaf " + toonDatum(plusMaanden(p.geboren, next.vanM));
+      } else {
+        $("mp-volgende").style.display = "none";
+      }
+    }
   }
 
   /* ---------- gewicht ---------- */
@@ -682,30 +833,78 @@
     if(state.log.length < 2){ blok.style.display = "none"; return; }
     blok.style.display = "block";
 
-    var punten = state.log.slice(0,12).reverse();
-    var kgs = punten.map(function(p){ return p.kg; });
-    var min = Math.min.apply(null,kgs), max = Math.max.apply(null,kgs);
-    if(max - min < 1){ var mid=(max+min)/2; min = mid-0.5; max = mid+0.5; }
-    var pad = (max-min)*0.15; min -= pad; max += pad;
+    var punten = state.log.slice(0,24).reverse(); // oudste eerst
+    var t0 = isoNaarDate(punten[0].d).getTime();
+    var t1 = isoNaarDate(punten[punten.length-1].d).getTime();
+    if(t1 - t0 < 86400000) t1 = t0 + 86400000;
 
     var W = 320, H = 130, mx = 8, my = 16;
-    function X(i){ return mx + i*(W-2*mx)/Math.max(1,punten.length-1); }
+    function X(t){ return mx + (t-t0)/(t1-t0)*(W-2*mx); }
+
+    var g = state.profiel.geboren, bandPts = null;
+    if(g){
+      var gt = isoNaarDate(g).getTime(), N = 24;
+      bandPts = [];
+      for(var i=0;i<=N;i++){
+        var t = t0 + (t1-t0)*i/N;
+        var mnd = (t-gt)/(30.44*86400000);
+        var mm = Math.max(CURVE[0][0], Math.min(CURVE[CURVE.length-1][0], mnd));
+        var bmin = CURVE[0][1], bmax = CURVE[0][2];
+        if(mm >= CURVE[CURVE.length-1][0]){
+          bmin = CURVE[CURVE.length-1][1]; bmax = CURVE[CURVE.length-1][2];
+        } else {
+          for(var j=0;j<CURVE.length-1;j++){
+            var a = CURVE[j], b = CURVE[j+1];
+            if(mm >= a[0] && mm <= b[0]){
+              var f = (mm-a[0])/(b[0]-a[0]);
+              bmin = a[1] + (b[1]-a[1])*f;
+              bmax = a[2] + (b[2]-a[2])*f;
+              break;
+            }
+          }
+        }
+        bandPts.push({t:t, min:bmin, max:bmax});
+      }
+    }
+
+    var kgs = punten.map(function(pp){ return pp.kg; });
+    var min = Math.min.apply(null,kgs), max = Math.max.apply(null,kgs);
+    if(bandPts){
+      for(var k=0;k<bandPts.length;k++){
+        if(bandPts[k].min < min) min = bandPts[k].min;
+        if(bandPts[k].max > max) max = bandPts[k].max;
+      }
+    }
+    if(max - min < 1){ var mid = (max+min)/2; min = mid-0.5; max = mid+0.5; }
+    var pad = (max-min)*0.12; min -= pad; max += pad;
     function Y(kg){ return H-my - (kg-min)/(max-min)*(H-2*my); }
 
-    var lijn = "", vlak = "", stippen = "";
-    for(var i=0;i<punten.length;i++){
-      var x = X(i).toFixed(1), y = Y(punten[i].kg).toFixed(1);
-      lijn += (i?" L":"M") + x + " " + y;
+    var svg = "";
+    if(bandPts){
+      var d = "";
+      for(var i2=0;i2<bandPts.length;i2++){
+        d += (i2?" L":"M") + X(bandPts[i2].t).toFixed(1) + " " + Y(bandPts[i2].max).toFixed(1);
+      }
+      for(var i3=bandPts.length-1;i3>=0;i3--){
+        d += " L" + X(bandPts[i3].t).toFixed(1) + " " + Y(bandPts[i3].min).toFixed(1);
+      }
+      svg += '<path d="' + d + ' Z" fill="#3E5C4B" opacity="0.13"/>';
+    }
+
+    var lijn = "", stippen = "";
+    for(var i4=0;i4<punten.length;i4++){
+      var x = X(isoNaarDate(punten[i4].d).getTime()).toFixed(1);
+      var y = Y(punten[i4].kg).toFixed(1);
+      lijn += (i4?" L":"M") + x + " " + y;
       stippen += '<circle cx="'+x+'" cy="'+y+'" r="3.5" fill="#22201C"/>';
     }
-    vlak = lijn + " L" + X(punten.length-1).toFixed(1) + " " + (H-my) + " L" + X(0).toFixed(1) + " " + (H-my) + " Z";
+    svg += '<path d="'+lijn+'" fill="none" stroke="#22201C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' + stippen;
+    svg += '<text x="'+mx+'" y="11" font-size="10" fill="#6E675C" font-family="Archivo,sans-serif" font-weight="700">'+nl(Math.round(max*10)/10)+' kg</text>';
+    svg += '<text x="'+mx+'" y="'+(H-2)+'" font-size="10" fill="#6E675C" font-family="Archivo,sans-serif" font-weight="700">'+nl(Math.round(min*10)/10)+' kg</text>';
 
-    $("grafiek").innerHTML =
-      '<path d="'+vlak+'" fill="#3E5C4B" opacity="0.10"/>' +
-      '<path d="'+lijn+'" fill="none" stroke="#22201C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
-      stippen +
-      '<text x="'+mx+'" y="11" font-size="10" fill="#6E675C" font-family="Archivo,sans-serif" font-weight="700">'+nl(Math.round(max*10)/10)+' kg</text>' +
-      '<text x="'+mx+'" y="'+(H-2)+'" font-size="10" fill="#6E675C" font-family="Archivo,sans-serif" font-weight="700">'+nl(Math.round(min*10)/10)+' kg</text>';
+    $("grafiek").innerHTML = svg;
+    var leg = $("grafiek-legende");
+    if(leg) leg.style.display = bandPts ? "block" : "none";
   }
 
   /* ---------- fotos ---------- */
@@ -719,7 +918,8 @@
     leeg.style.display = "none";
     var h = "";
     for(var i=0;i<state.fotos.length;i++){
-      h += '<div class="vak"><img src="'+state.fotos[i]+'" alt="Buddy"><button class="x" data-f="'+i+'" aria-label="Foto verwijderen">&times;</button></div>';
+      var ster = state.fotos[i] === state.profiel.foto ? ' actief' : '';
+      h += '<div class="vak"><img src="'+state.fotos[i]+'" alt="Buddy"><button class="x" data-f="'+i+'" aria-label="Foto verwijderen">&times;</button><button class="ster'+ster+'" data-s="'+i+'" aria-label="Als profielfoto">&#9733;</button></div>';
     }
     g.innerHTML = h;
     $("foto-knop").textContent = state.fotos.length >= 9 ? "Maximaal 9 foto's" : "📷 Nog een foto toevoegen";
@@ -1005,6 +1205,9 @@
       state.fotos = Array.isArray(data.fotos) ? data.fotos : [];
       state.meta = data.meta || {laatsteBackup:null};
       state.gezondheid = Object.assign({vaccins:[],behandelingen:[],bezoeken:[]}, data.gezondheid||{});
+      if(Array.isArray(data.voeding) && data.voeding.length) state.voeding = data.voeding;
+      state.oppas = Object.assign({notities:""}, data.oppas||{});
+      var on = $("oppas-notities"); if(on) on.value = state.oppas.notities;
 
       bewaar(); tekenAlles();
       var l0 = laatste(); if(l0) $("gewicht").value = l0.kg;
@@ -1118,6 +1321,13 @@
   });
 
   $("galerij").addEventListener("click", function(e){
+    var s = e.target.closest(".ster");
+    if(s){
+      state.profiel.foto = state.fotos[+s.dataset.s];
+      bewaar(); tekenFotos(); tekenPas();
+      melden("Profielfoto ingesteld");
+      return;
+    }
     var b = e.target.closest(".x"); if(!b) return;
     var i = parseInt(b.dataset.f,10);
     if(!confirm("Deze foto verwijderen?")) return;
@@ -1188,6 +1398,145 @@
 
   $("agenda-knop").addEventListener("click", icsExporteer);
 
+  $("voer-toevoegen").addEventListener("click", function(){
+    var naam = $("voer-naam").value.trim();
+    var kcal = parseFloat($("voer-kcal").value);
+    if(!naam){ melden("Vul een naam in"); return; }
+    if(isNaN(kcal) || kcal < 40 || kcal > 600){ melden("kcal per 100 g ligt meestal tussen 60 en 500"); return; }
+    state.voeding.push({id:"v"+Date.now(), naam:naam, kcal100:Math.round(kcal), soort:$("voer-soort").value, actief:true});
+    $("voer-naam").value = ""; $("voer-kcal").value = "";
+    bewaar(); tekenPorties();
+    melden("Voer toegevoegd");
+  });
+
+  $("voer-lijst").addEventListener("click", function(e){
+    var aan = e.target.closest(".voer-aan");
+    if(aan){
+      var i = +aan.dataset.i;
+      state.voeding[i].actief = !state.voeding[i].actief;
+      bewaar(); tekenPorties();
+      return;
+    }
+    var wis = e.target.closest(".voer-wis");
+    if(wis){
+      var j = +wis.dataset.i;
+      if(!confirm(state.voeding[j].naam + " verwijderen?")) return;
+      state.voeding.splice(j,1);
+      bewaar(); tekenPorties();
+    }
+  });
+
+  /* ---------- oppas ---------- */
+  function b64uEnc(s){ return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); }
+  function b64uDec(s){ s = s.replace(/-/g,"+").replace(/_/g,"/"); while(s.length % 4) s += "="; return decodeURIComponent(escape(atob(s))); }
+
+  function oppasLink(){
+    var b = portiesBerekenen();
+    var meals = [];
+    for(var i=0;i<b.per.length;i++) meals.push([b.per[i].naam, b.per[i].maal]);
+    var olie = b.kg < 12 ? "7,5" : (b.kg < 20 ? "10" : "15");
+    var d = {v:1, n:state.profiel.naam||"Buddy", r:state.profiel.ras||"", m:meals, o:olie,
+             a:state.profiel.arts||"", c:state.profiel.chip||"", t:(state.oppas.notities||"").slice(0,400)};
+    return location.origin + location.pathname + "#oppas=" + b64uEnc(JSON.stringify(d));
+  }
+
+  $("oppas-deel").addEventListener("click", function(){
+    var url = oppasLink();
+    var naam = state.profiel.naam || "Buddy";
+    if(navigator.share){
+      navigator.share({title:"Oppasinfo " + naam, text:"Alles wat je moet weten om op " + naam + " te passen:", url:url}).catch(function(){});
+      return;
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(function(){ melden("Link gekopieerd"); }).catch(function(){ prompt("Kopieer de link:", url); });
+      return;
+    }
+    prompt("Kopieer de link:", url);
+  });
+
+  $("oppas-notities").addEventListener("input", function(){
+    state.oppas.notities = this.value;
+    bewaar();
+  });
+
+  /* ---------- oppasweergave ---------- */
+  var OPPAS_TAAL = {
+    nl: {
+      titel:"Zorgen voor", sub:"alles wat je moet weten", ocht:"Ochtend · ± 8:00", av:"Avond · ± 19:00",
+      gram:"gram", olie:"ml zalmolie door het eten mengen (fles eerst schudden)", geenolie:"Geen olie 's avonds",
+      meng:"Alles goed door elkaar mengen — niet in laagjes.",
+      regel:"De 15-minuten-regel",
+      stappen:["Zet het bakje neer en loop weg — geen aandacht geven.","Na 15 minuten het bakje weghalen, ook als er nog eten in zit.","Tot de volgende maaltijd niets geven — geen snoepjes of restjes.","Slaat hij een maaltijd over? Dat is normaal en niet erg."],
+      uitlaten:"Na elke maaltijd even naar buiten — dan moet hij meestal plassen.",
+      warmte:"Franse bulldogs kunnen slecht tegen hitte. Bij warm weer alleen 's ochtends vroeg of 's avonds laat wandelen. Zwaar piepen = stoppen en laten afkoelen.",
+      nooit:"Nooit geven",
+      nooitLijst:["Chocolade, druiven, rozijnen, ui, knoflook, avocado","Alles met xylitol (suikervrije kauwgom)","Gekookte botten","Restjes van tafel, hoe zielig hij ook kijkt"],
+      nood:"Noodgevallen", gif:"Antigifcentrum (24/7)", arts:"Dierenarts", chip:"Chipnummer",
+      notities:"Notities van het baasje"
+    },
+    en: {
+      titel:"Looking after", sub:"everything you need to know", ocht:"Morning · ± 8:00", av:"Evening · ± 19:00",
+      gram:"grams", olie:"ml of salmon oil mixed into the food (shake the bottle first)", geenolie:"No oil in the evening",
+      meng:"Mix everything together well — no layers.",
+      regel:"The 15-minute rule",
+      stappen:["Put the bowl down and walk away — no attention.","After 15 minutes, take the bowl away, even if food is left.","Nothing until the next meal — no treats or scraps.","Skipping a meal is normal and not a problem."],
+      uitlaten:"Take him outside right after each meal — that is usually when he needs to pee.",
+      warmte:"French bulldogs handle heat poorly. In warm weather walk only early morning or late evening. Heavy wheezing = stop and let him cool down.",
+      nooit:"Never feed",
+      nooitLijst:["Chocolate, grapes, raisins, onion, garlic, avocado","Anything with xylitol (sugar-free gum)","Cooked bones","Table scraps, no matter how he looks at you"],
+      nood:"Emergencies", gif:"Poison centre BE (24/7)", arts:"Vet", chip:"Chip number",
+      notities:"Notes from the owner"
+    }
+  };
+
+  function oppasBoot(){
+    var hsh = location.hash || "";
+    if(hsh.indexOf("#oppas=") !== 0) return false;
+    var d;
+    try{ d = JSON.parse(b64uDec(hsh.slice(7))); }catch(e){ return false; }
+    var taal = "nl";
+    function render(){
+      var T = OPPAS_TAAL[taal];
+      var mh = "";
+      for(var i=0;i<(d.m||[]).length;i++){
+        mh += '<div class="portie"><span class="g">' + d.m[i][1] + '</span><span class="wat">' + T.gram + ' ' + esc(d.m[i][0]) + '</span></div>';
+      }
+      var st = "";
+      for(var j=0;j<T.stappen.length;j++) st += "<li>" + T.stappen[j] + "</li>";
+      var nlst = "";
+      for(var k=0;k<T.nooitLijst.length;k++) nlst += "<li>" + T.nooitLijst[k] + "</li>";
+      document.querySelector(".app").innerHTML =
+        '<header style="text-align:center;">' +
+          '<div style="display:flex;justify-content:center;gap:6px;margin-bottom:14px;">' +
+            '<button class="knop licht klein" id="t-nl" style="width:auto;padding:0 18px;' + (taal==="nl" ? 'background:var(--ink);color:var(--paper);' : '') + '">NL</button>' +
+            '<button class="knop licht klein" id="t-en" style="width:auto;padding:0 18px;' + (taal==="en" ? 'background:var(--ink);color:var(--paper);' : '') + '">EN</button>' +
+          '</div>' +
+          '<div class="naam">' + T.titel + ' ' + esc(d.n) + '</div>' +
+          '<div class="sub">' + esc(d.r||"") + ' — ' + T.sub + '</div>' +
+        '</header>' +
+        '<div class="kaart ochtend"><div class="kop"><span>' + T.ocht + '</span></div><div class="body">' + mh +
+          '<div class="voet"><b>+ ' + d.o + ' ' + T.olie + '</b><br>' + T.meng + '</div></div></div>' +
+        '<div class="kaart avond"><div class="kop"><span>' + T.av + '</span></div><div class="body">' + mh +
+          '<div class="voet"><b>' + T.geenolie + '</b><br>' + T.meng + '</div></div></div>' +
+        '<h2>' + T.regel + '</h2><ol class="stappen">' + st + '</ol>' +
+        '<div class="tip">' + T.uitlaten + '</div>' +
+        '<div class="let-op">' + T.warmte + '</div>' +
+        '<h2>' + T.nooit + '</h2><ul class="punten">' + nlst + '</ul>' +
+        '<h2>' + T.nood + '</h2><div class="kaart"><div class="body">' +
+          '<div class="vac-rij"><div><div class="vac-naam">' + T.gif + '</div></div><a class="knop licht klein" style="width:auto;padding:0 14px;text-decoration:none;display:flex;" href="tel:070245245">070 245 245</a></div>' +
+          (d.a ? '<div class="vac-rij"><div><div class="vac-naam">' + T.arts + '</div></div><a class="knop licht klein" style="width:auto;padding:0 14px;text-decoration:none;display:flex;" href="tel:' + d.a.replace(/[^+0-9]/g,"") + '">' + esc(d.a) + '</a></div>' : "") +
+          (d.c ? '<div class="vac-rij"><div><div class="vac-naam">' + T.chip + '</div><div class="vac-sub">' + esc(d.c) + '</div></div></div>' : "") +
+        '</div></div>' +
+        (d.t ? '<h2>' + T.notities + '</h2><div class="kaart"><div class="body" style="font-size:15px;white-space:pre-wrap;">' + esc(d.t) + '</div></div>' : "") +
+        '<footer>Buddy-app</footer>';
+      document.getElementById("t-nl").addEventListener("click", function(){ taal = "nl"; render(); });
+      document.getElementById("t-en").addEventListener("click", function(){ taal = "en"; render(); });
+      window.scrollTo(0,0);
+    }
+    render();
+    return true;
+  }
+
   $("backup-maken").addEventListener("click", exporteer);
   $("backup-terug").addEventListener("click", function(){ $("backup-input").click(); });
   $("backup-input").addEventListener("change", function(){
@@ -1195,7 +1544,10 @@
     if(f) importeer(f);
   });
 
+  if(oppasBoot()) return;
+
   laad();
+  $("oppas-notities").value = state.oppas.notities || "";
   $("weeg-datum").value = vandaag();
   $("vac-datum").value = vandaag();
   $("beh-datum").value = vandaag();
