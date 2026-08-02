@@ -521,6 +521,13 @@
     <p style="font-size:12.5px;color:var(--soft);margin-top:8px;">Tik op een vlucht om bestemming, terugkomst en oppas in te stellen — één tik op een naam en het is geregeld.</p>
 
     <button class="knop" id="rooster-vraag">📅 Vraag beschikbaarheid aan oppassers</button>
+    <p style="font-size:12px;color:var(--soft);margin:8px 0 0;">🔒 Alleen voor mensen die je vertrouwt — in de link staat wanneer je niet thuis bent. Nooit openbaar posten (bv. in een Facebookgroep).</p>
+    <button class="link-knop" id="mail-toggle" style="margin-top:10px;">✉️ Antwoorden automatisch per e-mail ontvangen</button>
+    <div id="mail-kaart" class="kaart" style="display:none;margin-top:10px;"><div class="body">
+      <p style="font-size:13px;color:var(--soft);margin-bottom:10px;">Maak eenmalig een gratis formulier op <b>formspree.io</b> met jouw e-mailadres en plak hier de code of de hele link. Nieuwe oppaslinks sturen antwoorden dan vanzelf naar je mail — de oppas hoeft niets meer door te sturen.</p>
+      <div class="veldrij"><label>Formspree-code</label><input id="mail-id" type="text" placeholder="bv. mqkrjzyx of https://formspree.io/f/mqkrjzyx"></div>
+      <p id="mail-status" style="font-size:12.5px;font-weight:800;margin-top:4px;"></p>
+    </div></div>
     <div style="height:8px;"></div>
     <button class="knop licht" id="rooster-deel">🍽 Deel de verzorgingsgids</button>
     <div style="height:8px;"></div>
@@ -635,7 +642,7 @@
       {id:"v2", naam:"Butternut Box", kcal100:120, soort:"nat", actief:true}
     ],
     oppas: {notities:""},
-    rooster: {weg:{}, oppas:{}, mensen:[]}
+    rooster: {weg:{}, oppas:{}, mensen:[], mail:""}
   };
   var KCAL_PER_G_REF = 3.74; // Hill's-referentie waarop de voedingstabel is gebaseerd
 
@@ -1957,6 +1964,30 @@
     }
   });
 
+  function mailStatus(){
+    var st3 = $("mail-status"), tg3 = $("mail-toggle");
+    if(!st3 || !tg3) return;
+    if(state.rooster.mail){
+      st3.textContent = "✅ Actief — nieuwe oppaslinks sturen antwoorden per e-mail.";
+      st3.style.color = "#3E5C4B";
+      tg3.textContent = "✉️ E-mailantwoorden: actief";
+    } else {
+      st3.textContent = "Nog niet ingesteld — antwoorden gaan via WhatsApp.";
+      st3.style.color = "var(--soft)";
+      tg3.textContent = "✉️ Antwoorden automatisch per e-mail ontvangen";
+    }
+  }
+  $("mail-toggle").addEventListener("click", function(){
+    var mk3 = $("mail-kaart");
+    mk3.style.display = (mk3.style.display === "none") ? "block" : "none";
+  });
+  $("mail-id").addEventListener("input", function(){
+    var v = this.value.trim();
+    var m3 = v.match(/formspree\.io\/f\/([A-Za-z0-9]+)/);
+    state.rooster.mail = m3 ? m3[1] : v.replace(/[^A-Za-z0-9]/g, "");
+    bewaar(); mailStatus();
+  });
+
   $("mensen-toggle").addEventListener("click", function(){
     var mk = $("mensen-kaart");
     mk.style.display = (mk.style.display === "none") ? "block" : "none";
@@ -2007,6 +2038,7 @@
       lijst.push([trips[i].van, trips[i].tot, o.best||"", o.terug||""]);
     }
     var d = {v:1, n:state.profiel.naam||"Buddy", t:lijst};
+    if(state.rooster.mail) d.f = state.rooster.mail;
     return location.origin + location.pathname + "#vraag=" + b64uEnc(JSON.stringify(d));
   }
 
@@ -2081,18 +2113,50 @@
       }
     };
 
-    function stuur(){
+    var verzondenOk = false;
+    function bouwTekst(){
       var T = TAAL[taal], sel = [];
       for(var i=0;i<d.t.length;i++){ if(keuze[i]) sel.push(lbl(d.t[i], taal === "en")); }
       var txt = T.hoi(naamW.trim()) + "\n" + (sel.length ? T.kan + "\n• " + sel.join("\n• ") : T.geen);
       if(opm.trim()) txt += "\n💬 " + opm.trim();
-      txt += "\n🐾";
+      return txt + "\n🐾";
+    }
+    function deelZelf(){
+      var txt = bouwTekst();
       if(navigator.share){ navigator.share({text:txt}).catch(function(){}); return; }
       if(navigator.clipboard && navigator.clipboard.writeText){
         navigator.clipboard.writeText(txt).then(function(){ melden(taal==="en" ? "Copied — paste it in WhatsApp" : "Gekopieerd — plak het in WhatsApp"); }).catch(function(){ prompt("", txt); });
         return;
       }
       prompt("", txt);
+    }
+    function stuur(){
+      var T = TAAL[taal];
+      if(!d.f){ deelZelf(); return; }
+      if(verzondenOk) return;
+      if(!naamW.trim()){ melden(taal==="en" ? "Please enter your name first" : "Vul eerst je naam in"); return; }
+      var knop = document.getElementById("vr-stuur");
+      knop.disabled = true;
+      knop.textContent = taal==="en" ? "Sending…" : "Versturen…";
+      var body = {
+        _subject: (taal==="en" ? "Dog-sitting reply from " : "Oppas-antwoord van ") + naamW.trim(),
+        naam: naamW.trim(),
+        antwoord: bouwTekst()
+      };
+      fetch("https://formspree.io/f/" + encodeURIComponent(d.f), {
+        method:"POST",
+        headers:{"Accept":"application/json","Content-Type":"application/json"},
+        body: JSON.stringify(body)
+      }).then(function(r){
+        if(!r.ok) throw new Error("mislukt");
+        verzondenOk = true;
+        knop.textContent = taal==="en" ? "✅ Sent!" : "✅ Verstuurd!";
+        melden(taal==="en" ? "Your answer is on its way" : "Je antwoord is onderweg");
+      }).catch(function(){
+        knop.disabled = false;
+        knop.textContent = T.stuur;
+        melden(taal==="en" ? "Sending failed — use the WhatsApp option below" : "Versturen lukte niet — gebruik de WhatsApp-optie hieronder");
+      });
     }
 
     function render(){
@@ -2116,7 +2180,8 @@
           '<div class="veldrij"><label>' + T.opm + '</label><textarea id="vr-opm" rows="2">' + esc(opm) + '</textarea></div>' +
           rijen +
           '<div style="height:12px;"></div>' +
-          '<button class="knop" id="vr-stuur">' + T.stuur + '</button>' +
+          '<button class="knop" id="vr-stuur"' + (verzondenOk ? ' disabled' : '') + '>' + (verzondenOk ? (taal==="en" ? "✅ Sent!" : "✅ Verstuurd!") : T.stuur) + '</button>' +
+          (d.f ? '<button class="link-knop" id="vr-deel-zelf" style="margin-top:10px;">' + (taal==="en" ? "Prefer to send it yourself via WhatsApp?" : "Liever zelf via WhatsApp sturen?") + '</button>' : '') +
         '</div></div>' +
         '<footer>Buddy-app</footer>';
       document.getElementById("t-nl").addEventListener("click", function(){ taal = "nl"; render(); });
@@ -2124,6 +2189,8 @@
       document.getElementById("vr-naam").addEventListener("input", function(){ naamW = this.value; });
       document.getElementById("vr-opm").addEventListener("input", function(){ opm = this.value; });
       document.getElementById("vr-stuur").addEventListener("click", stuur);
+      var dz = document.getElementById("vr-deel-zelf");
+      if(dz) dz.addEventListener("click", deelZelf);
       var boxes = document.querySelectorAll(".vraag-rij input");
       Array.prototype.forEach.call(boxes, function(b){
         b.addEventListener("change", function(){ keuze[+this.dataset.i] = this.checked; });
@@ -2254,6 +2321,8 @@
 
   laad();
   $("oppas-notities").value = state.oppas.notities || "";
+  $("mail-id").value = state.rooster.mail || "";
+  mailStatus();
   $("weeg-datum").value = vandaag();
   $("vac-datum").value = vandaag();
   $("beh-datum").value = vandaag();
