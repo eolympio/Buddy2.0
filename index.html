@@ -19,6 +19,40 @@
     --ochtend:#C8842B; --avond:#3E5C4B; --alarm:#A63A2B; --soft:#6E675C;
     --pas:#2F4A5C;
     --vlieg:#0032A0;
+    --tabbg:#EFE9DB; --vak:#EFE9DB;
+    --groen-bg:#EAF1EA; --groen-fg:#3E5C4B;
+    --oranje-bg:#F7EBD8; --oranje-fg:#9A6516;
+    --rood-bg:#FBEFEC; --rood-fg:#A63A2B;
+    --grijs-bg:#F0EBDF; --grijs-fg:#6E675C;
+    --tip-bg:#EDF1EC; --letop-bg:#FBEFEC;
+    --schaduw:rgba(34,32,28,.22);
+  }
+  /* ---------- donkere modus ---------- */
+  :root[data-thema="donker"] {
+    --ink:#EDE8DE; --paper:#15140F; --kaart:#1F1D18; --line:#35322B;
+    --ochtend:#C8842B; --avond:#4E7A62; --alarm:#D9705C; --soft:#A69D8D;
+    --pas:#8FB3C9; --vlieg:#5B87E8;
+    --tabbg:#26231D; --vak:#26231D;
+    --groen-bg:#1D3226; --groen-fg:#9AD9B0;
+    --oranje-bg:#3A2E1A; --oranje-fg:#E5B25C;
+    --rood-bg:#3A211C; --rood-fg:#F0917C;
+    --grijs-bg:#2A2721; --grijs-fg:#A69D8D;
+    --tip-bg:#1E2820; --letop-bg:#331F1B;
+    --schaduw:rgba(0,0,0,.5);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-thema="licht"]):not([data-thema="donker"]) {
+    --ink:#EDE8DE; --paper:#15140F; --kaart:#1F1D18; --line:#35322B;
+    --ochtend:#C8842B; --avond:#4E7A62; --alarm:#D9705C; --soft:#A69D8D;
+    --pas:#8FB3C9; --vlieg:#5B87E8;
+    --tabbg:#26231D; --vak:#26231D;
+    --groen-bg:#1D3226; --groen-fg:#9AD9B0;
+    --oranje-bg:#3A2E1A; --oranje-fg:#E5B25C;
+    --rood-bg:#3A211C; --rood-fg:#F0917C;
+    --grijs-bg:#2A2721; --grijs-fg:#A69D8D;
+    --tip-bg:#1E2820; --letop-bg:#331F1B;
+    --schaduw:rgba(0,0,0,.5);
+    }
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html{-webkit-text-size-adjust:100%;}
@@ -36,7 +70,7 @@
   .sub{font-size:13px;color:var(--soft);font-weight:600;margin-top:4px;}
 
   .tabs{
-    display:flex;gap:4px;background:#EFE9DB;padding:4px;border-radius:12px;
+    display:flex;gap:4px;background:var(--tabbg);padding:4px;border-radius:12px;
     position:sticky;top:0;z-index:30;margin-bottom:16px;
   }
   .tabs button{
@@ -59,7 +93,7 @@
   .pas{
     background:linear-gradient(160deg,#35566B 0%,#2A4051 100%);
     border-radius:16px;padding:18px 16px;color:#fff;margin-bottom:14px;
-    box-shadow:0 8px 22px rgba(34,32,28,.22);
+    box-shadow:0 8px 22px var(--schaduw);
   }
   .pas-top{display:flex;gap:14px;align-items:center;}
   .pas-foto{
@@ -106,7 +140,7 @@
   .huidig .groot small{font-size:22px;font-weight:600;}
   .huidig .wanneer{font-size:13px;color:var(--soft);margin-top:6px;}
   .verschil{display:inline-block;margin-top:9px;padding:4px 11px;border-radius:20px;font-size:13px;font-weight:800;}
-  .op{background:#EAF1EA;color:#3E5C4B;} .neer{background:#FBEFEC;color:#A63A2B;} .gelijk{background:#F0EBDF;color:var(--soft);}
+  .op{background:var(--groen-bg);color:var(--groen-fg);} .neer{background:var(--rood-bg);color:var(--rood-fg);} .gelijk{background:var(--grijs-bg);color:var(--grijs-fg);}
 
   .rij{display:flex;align-items:center;justify-content:center;gap:16px;margin:6px 0 16px;}
   .stap{
@@ -126,6 +160,10 @@
   /* ---------- grafiek ---------- */
   .grafiek{background:var(--kaart);border:2px solid var(--ink);border-radius:14px;padding:16px 12px 10px;margin-bottom:14px;}
   .grafiek svg{width:100%;height:130px;display:block;}
+  #grafiek .band{fill:var(--avond);}
+  #grafiek .lijn{stroke:var(--ink);}
+  #grafiek .punt{fill:var(--ink);}
+  #grafiek .as{fill:var(--soft);}
 
   /* ---------- log ---------- */
   .log-item{
@@ -139,11 +177,11 @@
     width:34px;height:34px;flex:none;border:none;background:transparent;color:var(--soft);
     font-size:19px;cursor:pointer;border-radius:50%;
   }
-  .wis:active{background:#FBEFEC;color:var(--alarm);}
+  .wis:active{background:var(--rood-bg);color:var(--alarm);}
 
   /* ---------- fotos ---------- */
   .galerij{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px;}
-  .galerij .vak{position:relative;aspect-ratio:1;border-radius:11px;overflow:hidden;background:#EFE9DB;}
+  .galerij .vak{position:relative;aspect-ratio:1;border-radius:11px;overflow:hidden;background:var(--vak);}
   .galerij img{width:100%;height:100%;object-fit:cover;display:block;}
   .galerij .vak .x{
     position:absolute;top:5px;right:5px;width:26px;height:26px;border:none;border-radius:50%;
@@ -165,9 +203,9 @@
   ul.punten li:last-child{border-bottom:none;}
   ul.punten li::before{content:"—";position:absolute;left:0;color:var(--soft);}
 
-  .let-op{border-left:5px solid var(--alarm);background:#FBEFEC;border-radius:0 10px 10px 0;padding:14px 16px;margin-top:12px;font-size:14.5px;}
+  .let-op{border-left:5px solid var(--alarm);background:var(--letop-bg);border-radius:0 10px 10px 0;padding:14px 16px;margin-top:12px;font-size:14.5px;}
   .let-op b{color:var(--alarm);}
-  .tip{background:#EDF1EC;border-radius:10px;padding:13px 15px;font-size:14.5px;margin-top:12px;}
+  .tip{background:var(--tip-bg);border-radius:10px;padding:13px 15px;font-size:14.5px;margin-top:12px;}
 
   .portie{display:flex;align-items:baseline;gap:8px;padding:7px 0;}
   .portie .g{font-family:"Fraunces",Georgia,serif;font-weight:900;font-size:36px;line-height:1;letter-spacing:-.03em;min-width:86px;}
@@ -175,17 +213,17 @@
   .voet{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:14px;}
 
   .chip{display:inline-block;padding:3px 10px;border-radius:14px;font-size:11.5px;font-weight:800;white-space:nowrap;}
-  .chip.groen{background:#EAF1EA;color:#3E5C4B;}
-  .chip.oranje{background:#F7EBD8;color:#9A6516;}
-  .chip.rood{background:#FBEFEC;color:#A63A2B;}
-  .chip.grijs{background:#F0EBDF;color:var(--soft);}
+  .chip.groen{background:var(--groen-bg);color:var(--groen-fg);}
+  .chip.oranje{background:var(--oranje-bg);color:var(--oranje-fg);}
+  .chip.rood{background:var(--rood-bg);color:var(--rood-fg);}
+  .chip.grijs{background:var(--grijs-bg);color:var(--grijs-fg);}
   .vac-rij{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);align-items:center;}
   .vac-rij:last-child{border-bottom:none;}
   .vac-naam{font-weight:700;font-size:15px;}
   .vac-sub{font-size:12.5px;color:var(--soft);}
   .vac-sub2{font-size:12.5px;font-weight:600;margin-top:2px;}
   .vac-wis{border:none;background:transparent;color:var(--soft);font-size:16px;cursor:pointer;padding:2px 6px;border-radius:50%;}
-  .vac-wis:active{background:#FBEFEC;color:var(--alarm);}
+  .vac-wis:active{background:var(--rood-bg);color:var(--alarm);}
   .veldrij select,.veldrij textarea{width:100%;min-height:48px;border:2px solid var(--line);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:16px;color:var(--ink);background:var(--paper);}
   .veldrij select{padding:0 10px;}
   .veldrij select:focus,.veldrij textarea:focus{outline:none;border-color:var(--pas);}
@@ -220,6 +258,17 @@
   .vraag-rij:last-of-type{border-bottom:none;}
   .vraag-rij input{width:24px;height:24px;flex:none;accent-color:var(--vlieg);}
   .link-knop{border:none;background:none;color:var(--pas);font-weight:800;font-size:12px;cursor:pointer;padding:0;font-family:inherit;text-decoration:underline;}
+  #ververs-knop{
+    position:absolute;right:0;top:calc(20px + env(safe-area-inset-top));
+    width:38px;height:38px;border:2px solid var(--line);border-radius:50%;
+    background:var(--kaart);color:var(--soft);font-size:19px;line-height:1;cursor:pointer;padding:0;
+  }
+  #ververs-knop:active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  #ptr{
+    position:fixed;left:50%;top:0;transform:translate(-50%,-60px);
+    background:var(--ink);color:var(--paper);padding:9px 18px;border-radius:0 0 18px 18px;
+    font-size:13px;font-weight:800;z-index:120;pointer-events:none;opacity:0;
+  }
   .melding{
     position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom));
     background:var(--ink);color:var(--paper);padding:11px 20px;border-radius:24px;
@@ -234,7 +283,8 @@
 <body>
 <div class="app">
 
-  <header>
+  <header style="position:relative;">
+    <button id="ververs-knop" aria-label="Vernieuwen" title="Vernieuwen">&#8635;</button>
     <div class="naam">Buddy</div>
     <div class="sub" id="kopregel">Franse bulldog</div>
   </header>
@@ -528,7 +578,7 @@
     <button class="knop licht klein" id="plak-toggle" style="margin-bottom:14px;">📩 Antwoord van een oppasser invoeren</button>
     <div id="plak-kaart" class="kaart" style="display:none;"><div class="body">
       <p style="font-size:13px;color:var(--soft);margin-bottom:10px;">Kopieer de code (of de hele link) uit het bericht van je oppas en plak die hier. De dagen worden dan meteen in jouw agenda gezet.</p>
-      <div class="veldrij"><label>Code of link</label><textarea id="plak-veld" rows="2" placeholder="OK-… of AF-…"></textarea></div>
+      <div class="veldrij"><label>Code of link</label><textarea id="plak-veld" rows="2" placeholder="bv. OK-260805.260807-Lisa"></textarea></div>
       <button class="knop" id="plak-lees">📋 Plakken uit klembord</button>
       <div style="height:8px;"></div>
       <button class="knop licht" id="plak-verwerk">Verwerken</button>
@@ -591,6 +641,16 @@
       <li>Restjes van tafel, hoe zielig hij ook kijkt.</li>
     </ul>
 
+    <h2>Weergave</h2>
+    <div class="kaart"><div class="body">
+      <div style="display:flex;gap:8px;" id="thema-keuze">
+        <button class="knop licht klein" data-thema="auto">Automatisch</button>
+        <button class="knop licht klein" data-thema="licht">Licht</button>
+        <button class="knop licht klein" data-thema="donker">Donker</button>
+      </div>
+      <p style="font-size:12.5px;color:var(--soft);margin-top:9px;">Automatisch volgt de instelling van je telefoon — 's avonds vanzelf donker.</p>
+    </div></div>
+
     <h2>Backup</h2>
     <div class="kaart"><div class="body">
       <p id="backup-status" style="font-size:14px;margin-bottom:12px;">Nog geen backup gemaakt.</p>
@@ -611,6 +671,7 @@
 </div>
 
 <div class="melding" id="melding"></div>
+<div id="ptr"><span id="ptr-tekst">Trek verder om te vernieuwen</span></div>
 
 <script>
 (function(){
@@ -660,9 +721,33 @@
       {id:"v2", naam:"Butternut Box", kcal100:120, soort:"nat", actief:true}
     ],
     oppas: {notities:""},
-    rooster: {weg:{}, oppas:{}, mensen:[], mail:""}
+    rooster: {weg:{}, oppas:{}, mensen:[], mail:""},
+    thema: "auto"
   };
   var KCAL_PER_G_REF = 3.74; // Hill's-referentie waarop de voedingstabel is gebaseerd
+
+  function pasThemaToe(){
+    var t = state.thema || "auto";
+    if(t === "auto") document.documentElement.removeAttribute("data-thema");
+    else document.documentElement.setAttribute("data-thema", t);
+    var donker = t === "donker" ||
+      (t === "auto" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if(meta) meta.setAttribute("content", donker ? "#15140F" : "#FBF8F2");
+    var kn = document.querySelectorAll("#thema-keuze button");
+    Array.prototype.forEach.call(kn, function(b){
+      var aan = b.dataset.thema === t;
+      b.classList.toggle("licht", !aan);
+    });
+  }
+  // meteen toepassen, nog vóór het tekenen — voorkomt een witte flits
+  (function(){
+    try{
+      var ruw = localStorage.getItem("buddy.v2");
+      var t = ruw ? (JSON.parse(ruw).thema || "auto") : "auto";
+      if(t !== "auto") document.documentElement.setAttribute("data-thema", t);
+    }catch(e){}
+  })();
 
   function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
@@ -694,6 +779,7 @@
         if(d.gezondheid) state.gezondheid = Object.assign({vaccins:[],behandelingen:[],bezoeken:[]}, d.gezondheid);
         if(Array.isArray(d.voeding) && d.voeding.length) state.voeding = d.voeding;
         if(d.oppas) state.oppas = Object.assign({notities:""}, d.oppas);
+        if(d.thema) state.thema = d.thema;
         if(d.rooster) state.rooster = Object.assign({weg:{},oppas:{},mensen:[]}, d.rooster);
         var nieuwe = migrMensen(); normOppas();
         if(nieuwe) setTimeout(bewaar, 0); // kleuren vastzetten
@@ -1034,7 +1120,7 @@
       for(var i3=bandPts.length-1;i3>=0;i3--){
         d += " L" + X(bandPts[i3].t).toFixed(1) + " " + Y(bandPts[i3].min).toFixed(1);
       }
-      svg += '<path d="' + d + ' Z" fill="#3E5C4B" opacity="0.13"/>';
+      svg += '<path class="band" d="' + d + ' Z" opacity="0.13"/>';
     }
 
     var lijn = "", stippen = "";
@@ -1042,11 +1128,11 @@
       var x = X(isoNaarDate(punten[i4].d).getTime()).toFixed(1);
       var y = Y(punten[i4].kg).toFixed(1);
       lijn += (i4?" L":"M") + x + " " + y;
-      stippen += '<circle cx="'+x+'" cy="'+y+'" r="3.5" fill="#22201C"/>';
+      stippen += '<circle class="punt" cx="'+x+'" cy="'+y+'" r="3.5"/>';
     }
-    svg += '<path d="'+lijn+'" fill="none" stroke="#22201C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' + stippen;
-    svg += '<text x="'+mx+'" y="11" font-size="10" fill="#6E675C" font-family="Archivo,sans-serif" font-weight="700">'+nl(Math.round(max*10)/10)+' kg</text>';
-    svg += '<text x="'+mx+'" y="'+(H-2)+'" font-size="10" fill="#6E675C" font-family="Archivo,sans-serif" font-weight="700">'+nl(Math.round(min*10)/10)+' kg</text>';
+    svg += '<path class="lijn" d="'+lijn+'" fill="none" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' + stippen;
+    svg += '<text x="'+mx+'" y="11" class="as" font-size="10" font-family="Archivo,sans-serif" font-weight="700">'+nl(Math.round(max*10)/10)+' kg</text>';
+    svg += '<text x="'+mx+'" y="'+(H-2)+'" class="as" font-size="10" font-family="Archivo,sans-serif" font-weight="700">'+nl(Math.round(min*10)/10)+' kg</text>';
 
     $("grafiek").innerHTML = svg;
     var leg = $("grafiek-legende");
@@ -1353,6 +1439,8 @@
       state.gezondheid = Object.assign({vaccins:[],behandelingen:[],bezoeken:[]}, data.gezondheid||{});
       if(Array.isArray(data.voeding) && data.voeding.length) state.voeding = data.voeding;
       state.oppas = Object.assign({notities:""}, data.oppas||{});
+      state.thema = data.thema || "auto";
+      pasThemaToe();
       state.rooster = Object.assign({weg:{},oppas:{},mensen:[]}, data.rooster||{});
       migrMensen(); normOppas();
       var on = $("oppas-notities"); if(on) on.value = state.oppas.notities;
@@ -1602,15 +1690,57 @@
   function b64uEnc(s){ return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); }
   function b64uDec(s){ s = s.replace(/-/g,"+").replace(/_/g,"/"); while(s.length % 4) s += "="; return decodeURIComponent(escape(atob(s))); }
 
+  /* ---------- compacte links ----------
+     Nieuw formaat: positionele arrays + datums als JJMMDD.
+     Oude links (objecten met sleutels) blijven werken via de normalisatie hieronder. */
+  function d6(iso){ return iso ? iso.slice(2).replace(/-/g, "") : ""; }
+  function un6(s){
+    if(!s) return "";
+    if(s.length === 10) return s;                       // oud: 2026-08-05
+    return "20" + s.slice(0,2) + "-" + s.slice(2,4) + "-" + s.slice(4,6);
+  }
+  function trimLeeg(a){                                  // lege staartwaarden weglaten
+    var b = a.slice();
+    while(b.length && (b[b.length-1] === "" || b[b.length-1] === null || b[b.length-1] === undefined)) b.pop();
+    return b;
+  }
+  function basisUrl(){
+    return location.origin + location.pathname.replace(/index\.html$/, "");
+  }
+
+  function pakZorg(d){                                   // -> [n,r,m,o,k,a,c,t]
+    return trimLeeg([d.n||"", d.r||"", d.m||[], d.o||"", d.k||0, d.a||"", d.c||"", d.t||""]);
+  }
+  function normZorg(x){
+    if(!x) return null;
+    if(!Array.isArray(x)) return x;                      // oud formaat
+    return {n:x[0]||"", r:x[1]||"", m:x[2]||[], o:x[3]||"", k:x[4]||0, a:x[5]||"", c:x[6]||"", t:x[7]||""};
+  }
+  function pakReizen(lijst){                             // [[van,tot,best,terug],...]
+    var uit = [];
+    for(var i=0;i<lijst.length;i++){
+      uit.push(trimLeeg([d6(lijst[i][0]), d6(lijst[i][1]), lijst[i][2]||"", lijst[i][3]||""]));
+    }
+    return uit;
+  }
+  function normReizen(t){
+    var uit = [];
+    for(var i=0;i<(t||[]).length;i++){
+      var r = t[i];
+      uit.push([un6(r[0]), un6(r[1]), r[2]||"", r[3]||""]);
+    }
+    return uit;
+  }
+
   function oppasLink(){
     var b = portiesBerekenen();
     var meals = [];
     for(var i=0;i<b.per.length;i++) meals.push([b.per[i].naam, b.per[i].maal]);
     var olie = b.kg < 12 ? "7,5" : (b.kg < 20 ? "10" : "15");
-    var d = {v:1, n:state.profiel.naam||"Buddy", r:state.profiel.ras||"", m:meals, o:olie,
+    var d = {n:state.profiel.naam||"Buddy", r:state.profiel.ras||"", m:meals, o:olie,
              k:Math.round(dagKcal(b.kg, b.band)),
              a:state.profiel.arts||"", c:state.profiel.chip||"", t:(state.oppas.notities||"").slice(0,400)};
-    return location.origin + location.pathname + "#oppas=" + b64uEnc(JSON.stringify(d));
+    return basisUrl() + "#z=" + b64uEnc(JSON.stringify(pakZorg(d)));
   }
 
   function deelOppas(){
@@ -1868,13 +1998,13 @@
       regels.push("• " + tripLabel(t) + (o.best ? " · " + o.best : "") +
                   (o.terug ? " (tot " + kort(t.tot) + " " + DAGDEEL[o.terug] + ")" : ""));
     }
-    var mijnD = {v:1, n:naam, h:naamB, t:payloadT};
-    if(state.rooster.mail) mijnD.f = state.rooster.mail;
-    var mijnUrl = location.origin + location.pathname + "#mijn=" + b64uEnc(JSON.stringify(mijnD));
+    var zorgArr = null;
+    try{ zorgArr = JSON.parse(b64uDec(oppasLink().split("#z=")[1])); }catch(e){}
+    var arr = trimLeeg([naam, naamB, pakReizen(payloadT), state.rooster.mail||"", zorgArr, d6(vandaag())]);
+    var mijnUrl = basisUrl() + "#a=" + b64uEnc(JSON.stringify(arr));
     var txtB = "Hoi " + naam + "! Bevestigd 🐾\n" +
                "Jij past op " + naamB + " op deze data:\n" + regels.join("\n") +
-               "\n\n🍽 Alles over eten en zorg:\n" + oppasLink() +
-               "\n\n📅 Al je afspraken bekijken of een datum afzeggen:\n" + mijnUrl;
+               "\n\nHier staat alles: je afspraken, het eten en de zorg 👇\n" + mijnUrl;
     if(navigator.share){ navigator.share({text:txtB}).catch(function(){}); return; }
     if(navigator.clipboard && navigator.clipboard.writeText){
       navigator.clipboard.writeText(txtB).then(function(){ melden("Bevestiging gekopieerd"); }).catch(function(){ prompt("", txtB); });
@@ -2137,15 +2267,49 @@
   });
 
   var acceptPending = null;
+  /* Korte, leesbare code: OK-260805.260807_260828.260829-Lisa
+     (één dag = één datum). Oude base64-codes blijven werken. */
+  function kortCode(modus, naam, paren){
+    var stukken = [];
+    for(var i=0;i<paren.length;i++){
+      var a = d6(paren[i][0]), b = d6(paren[i][1]);
+      stukken.push(a === b ? a : a + "." + b);
+    }
+    return modus.toUpperCase() + "-" + stukken.join("_") + "-" + (naam || "").trim();
+  }
+  function leesKort(tekst){
+    var m = String(tekst).match(/\b(OK|AF)-(\d{6}(?:\.\d{6})?(?:_\d{6}(?:\.\d{6})?)*)-([^\n\r]+)/i);
+    if(!m) return null;
+    var naam = m[3].trim().replace(/[^A-Za-zÀ-ÿ0-9'’.\- ]+$/g, "").trim();
+    if(!naam) return null;
+    var paren = m[2].split("_").map(function(s){
+      var q = s.split(".");
+      return [un6(q[0]), un6(q[1] || q[0])];
+    });
+    return {modus:m[1].toLowerCase(), qd:{n:naam, t:paren, o:""}};
+  }
+
+  function normAntwoord(x){
+    if(!x) return null;
+    var o = Array.isArray(x)
+      ? {n:x[0]||"", t:x[1]||[], o:x[2]||""}
+      : {n:x.n||"", t:x.t||[], o:x.o||""};
+    if(!o.n || !Array.isArray(o.t) || !o.t.length) return null;
+    o.t = o.t.map(function(r){ return [un6(r[0]), un6(r[1])]; });
+    return o;
+  }
+
   // haalt "ok"/"af" + payload uit een link, een code of geplakte tekst
   function leesAntwoord(tekst){
     if(!tekst) return null;
     var s = String(tekst).trim();
+    var k = leesKort(s);
+    if(k) return k;
     var m = s.match(/[#?]?(ok|af)[=\-]([A-Za-z0-9_\-]{8,})/i);
     if(!m) return null;
     var qd;
-    try{ qd = JSON.parse(b64uDec(m[2])); }catch(e){ return null; }
-    if(!qd || !qd.n || !Array.isArray(qd.t) || !qd.t.length) return null;
+    try{ qd = normAntwoord(JSON.parse(b64uDec(m[2]))); }catch(e){ return null; }
+    if(!qd) return null;
     return {modus:m[1].toLowerCase(), qd:qd};
   }
 
@@ -2154,8 +2318,8 @@
     var modus = hsh.indexOf("#ok=") === 0 ? "ok" : (hsh.indexOf("#af=") === 0 ? "af" : null);
     if(!modus) return;
     var qd;
-    try{ qd = JSON.parse(b64uDec(hsh.slice(4))); }catch(e){ return; }
-    if(!qd || !qd.n || !Array.isArray(qd.t) || !qd.t.length) return;
+    try{ qd = normAntwoord(JSON.parse(b64uDec(hsh.slice(4)))); }catch(e){ return; }
+    if(!qd) return;
     acceptToon(modus, qd);
     try{ history.replaceState(null, "", location.pathname); }catch(e2){ location.hash = ""; }
   }
@@ -2232,6 +2396,9 @@
   $("accept-ok").addEventListener("click", function(){
     if(!acceptPending) return;
     var afzegging = acceptPending.modus === "af";
+    // bestaande schrijfwijze aanhouden (bv. "lisa" -> "Lisa")
+    var bekend = vindMens(acceptPending.naam);
+    if(bekend) acceptPending.naam = bekend.naam;
     if(!afzegging) registreer(acceptPending.naam);
     for(var i=0;i<acceptPending.trips.length;i++){
       var k = acceptPending.trips[i].van;
@@ -2299,9 +2466,8 @@
       var o = state.rooster.oppas[trips[i].van] || {};
       lijst.push([trips[i].van, trips[i].tot, o.best||"", o.terug||""]);
     }
-    var d = {v:1, n:state.profiel.naam||"Buddy", t:lijst};
-    if(state.rooster.mail) d.f = state.rooster.mail;
-    return location.origin + location.pathname + "#vraag=" + b64uEnc(JSON.stringify(d));
+    var arr = trimLeeg([state.profiel.naam||"Buddy", pakReizen(lijst), state.rooster.mail||""]);
+    return basisUrl() + "#v=" + b64uEnc(JSON.stringify(arr));
   }
 
   function deelVraag(){
@@ -2326,9 +2492,13 @@
 
   function vraagBoot(){
     var hsh = location.hash || "";
-    if(hsh.indexOf("#vraag=") !== 0) return false;
+    var kort3 = hsh.indexOf("#v=") === 0, lang3 = hsh.indexOf("#vraag=") === 0;
+    if(!kort3 && !lang3) return false;
     var d;
-    try{ d = JSON.parse(b64uDec(hsh.slice(7))); }catch(e){ return false; }
+    try{
+      var rx = JSON.parse(b64uDec(hsh.slice(kort3 ? 3 : 7)));
+      d = Array.isArray(rx) ? {n:rx[0]||"", t:normReizen(rx[1]), f:rx[2]||""} : {n:rx.n, t:normReizen(rx.t), f:rx.f||""};
+    }catch(e){ return false; }
     if(!d || !Array.isArray(d.t)) return false;
 
     var taal = "nl", naamW = "", keuze = {}, opm = "";
@@ -2380,21 +2550,24 @@
       var paren = [];
       for(var i=0;i<d.t.length;i++){ if(keuze[i]) paren.push([d.t[i][0], d.t[i][1]]); }
       if(!paren.length || !naamW.trim()) return "";
-      var q = {n:naamW.trim().slice(0,40), t:paren};
-      return location.origin + location.pathname + "#ok=" + b64uEnc(JSON.stringify(q));
+      var q = trimLeeg([naamW.trim().slice(0,40), paren.map(function(x){ return [d6(x[0]), d6(x[1])]; })]);
+      return basisUrl() + "#ok=" + b64uEnc(JSON.stringify(q));
     }
     function bouwTekst(){
       var T = TAAL[taal], sel = [];
       for(var i=0;i<d.t.length;i++){ if(keuze[i]) sel.push(lbl(d.t[i], taal === "en")); }
       var txt = T.hoi(naamW.trim()) + "\n" + (sel.length ? T.kan + "\n• " + sel.join("\n• ") : T.geen);
       if(opm.trim()) txt += "\n💬 " + opm.trim();
-      var bl = bevestigLink();
-      if(bl){
+      txt += "\n🐾";
+      var paren = [];
+      for(var p2=0;p2<d.t.length;p2++){ if(keuze[p2]) paren.push([d.t[p2][0], d.t[p2][1]]); }
+      if(paren.length && naamW.trim()){
         txt += "\n\n" + (taal==="en"
           ? "For the owner — paste this code in your Buddy app:"
-          : "Voor het baasje — plak deze code in je Buddy-app:") + "\nOK-" + bl.split("#ok=")[1];
+          : "Voor het baasje — plak deze code in je Buddy-app:") +
+          "\n" + kortCode("OK", naamW.trim(), paren);
       }
-      return txt + "\n🐾";
+      return txt;
     }
     function deelZelf(){
       var txt = bouwTekst();
@@ -2417,7 +2590,11 @@
         _subject: (taal==="en" ? "Dog-sitting reply from " : "Oppas-antwoord van ") + naamW.trim(),
         naam: naamW.trim(),
         antwoord: bouwTekst(),
-        bevestig_code: bevestigLink() ? "OK-" + bevestigLink().split("#ok=")[1] : ""
+        bevestig_code: (function(){
+          var pr = [];
+          for(var z=0;z<d.t.length;z++){ if(keuze[z]) pr.push([d.t[z][0], d.t[z][1]]); }
+          return (pr.length && naamW.trim()) ? kortCode("OK", naamW.trim(), pr) : "";
+        })()
       };
       var verzoek;
       try{
@@ -2490,9 +2667,12 @@
     try{ heeftData = !!localStorage.getItem("buddy.v2"); }catch(e){}
     if(heeftData) return false; // dit is de echte app — normale afhandeling
 
-    var code = (modus === "ok" ? "OK-" : "AF-") + hsh.slice(4);
-    var naam = "";
-    try{ naam = (JSON.parse(b64uDec(hsh.slice(4))) || {}).n || ""; }catch(e){}
+    var code = "", naam = "";
+    try{
+      var qd0 = normAntwoord(JSON.parse(b64uDec(hsh.slice(4))));
+      if(qd0){ naam = qd0.n; code = kortCode(modus, qd0.n, qd0.t); }
+    }catch(e){}
+    if(!code) code = (modus === "ok" ? "OK-" : "AF-") + hsh.slice(4);
 
     document.querySelector(".app").innerHTML =
       '<header style="text-align:center;">' +
@@ -2528,9 +2708,15 @@
   /* ---------- afspraak van de oppas ---------- */
   function mijnBoot(){
     var hsh = location.hash || "";
-    if(hsh.indexOf("#mijn=") !== 0) return false;
+    var kort4 = hsh.indexOf("#a=") === 0, lang4 = hsh.indexOf("#mijn=") === 0;
+    if(!kort4 && !lang4) return false;
     var d;
-    try{ d = JSON.parse(b64uDec(hsh.slice(6))); }catch(e){ return false; }
+    try{
+      var rx = JSON.parse(b64uDec(hsh.slice(kort4 ? 3 : 6)));
+      d = Array.isArray(rx)
+        ? {n:rx[0]||"", h:rx[1]||"", t:normReizen(rx[2]), f:rx[3]||"", z:rx[4]||null, s:rx[5]||""}
+        : {n:rx.n, h:rx.h, t:normReizen(rx.t), f:rx.f||"", z:null, s:""};
+    }catch(e){ return false; }
     if(!d || !Array.isArray(d.t) || !d.t.length) return false;
 
     var taal = "nl", opm = "", verzonden = false, afKeuze = {};
@@ -2569,6 +2755,54 @@
       }
     };
 
+    var zorgD = d.z ? normZorg(d.z) : null;
+
+    function statusNu(en){
+      var vd = vandaag(), eerst = null, actief = null, alles = true;
+      for(var i=0;i<d.t.length;i++){
+        var t = d.t[i];
+        if(vd >= t[0] && vd <= t[1]) actief = t;
+        if(t[1] >= vd){ alles = false; if(!eerst || t[0] < eerst[0]) eerst = t; }
+      }
+      if(actief) return {k:"nu", tekst: en ? "Today you're looking after " + esc(d.h) : "Vandaag pas jij op " + esc(d.h)};
+      if(eerst){
+        var dg = Math.round((isoNaarDate(eerst[0]) - isoNaarDate(vd))/86400000);
+        if(dg === 0) return {k:"nu", tekst: en ? "Starts today" : "Vandaag begint het"};
+        if(dg === 1) return {k:"bijna", tekst: en ? "Starts tomorrow" : "Morgen begint het"};
+        return {k:"later", tekst: en ? "Starts in " + dg + " days" : "Over " + dg + " dagen begint het"};
+      }
+      if(alles) return {k:"klaar", tekst: en ? "All dates have passed — thank you!" : "Alle data zijn voorbij — bedankt!"};
+      return null;
+    }
+
+    function hintWeg(){
+      try{ return localStorage.getItem("buddy.tip.thuis") === "1"; }catch(e){ return false; }
+    }
+    function hintBlok(en){
+      if(hintWeg()) return "";
+      var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent || "");
+      return '<div class="tip" id="thuis-tip" style="position:relative;">' +
+               '<button id="thuis-weg" aria-label="Sluiten" style="position:absolute;right:8px;top:6px;border:none;background:none;color:var(--soft);font-size:17px;cursor:pointer;">&times;</button>' +
+               '<b>' + (en ? "Keep this handy" : "Houd dit bij de hand") + '</b><br>' +
+               (en
+                 ? (iOS ? "Tap the Share button below and choose <b>Add to Home Screen</b> — then it's one tap away, no scrolling through chats."
+                        : "Open the browser menu and choose <b>Add to home screen</b> — then it's one tap away.")
+                 : (iOS ? "Tik onderaan op het deel-icoon en kies <b>Zet op beginscherm</b> — dan hoef je nooit meer in je chats te zoeken."
+                        : "Open het browsermenu en kies <b>Toevoegen aan startscherm</b> — dan hoef je nooit meer te zoeken.")) +
+             '</div>';
+    }
+
+    function verseBlok(en){
+      if(!d.s) return "";
+      var iso = un6(d.s);
+      var dagen = Math.round((isoNaarDate(vandaag()) - isoNaarDate(iso))/86400000);
+      var oud2 = dagen > 21;
+      return '<p style="font-size:12px;color:' + (oud2 ? "var(--alarm)" : "var(--soft)") + ';text-align:center;margin-top:14px;">' +
+               (en ? "Info from " : "Info van ") + mnd(iso, en) +
+               (oud2 ? (en ? " — this may be out of date." : " — dit kan verouderd zijn.") : "") +
+               '<br><button class="link-knop" id="vraag-update">' + (en ? "Ask for an updated link" : "Vraag een nieuwe link") + '</button></p>';
+    }
+
     function mnd(iso, en){
       var M = en ? ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] : MAANDEN;
       var q = iso.split("-");
@@ -2592,18 +2826,20 @@
     function afLink(){
       var paren = [], sel = gekozen();
       for(var i=0;i<sel.length;i++) paren.push([sel[i][0], sel[i][1]]);
-      var q = {n:(d.n||"").slice(0,40), t:paren};
-      if(opm.trim()) q.o = opm.trim().slice(0,300);
-      return location.origin + location.pathname + "#af=" + b64uEnc(JSON.stringify(q));
+      var q = trimLeeg([(d.n||"").slice(0,40), paren.map(function(x){ return [d6(x[0]), d6(x[1])]; }), opm.trim().slice(0,300)]);
+      return basisUrl() + "#af=" + b64uEnc(JSON.stringify(q));
     }
     function afTekst(){
       var en = taal === "en", T = T3[taal], regels = [], sel = gekozen();
       for(var i=0;i<sel.length;i++) regels.push(periode(sel[i], en) + (sel[i][2] ? " · " + sel[i][2] : ""));
       var txt = (d.n ? d.n + ": " : "") + T.hoi + "\n• " + regels.join("\n• ");
       if(opm.trim()) txt += "\n💬 " + opm.trim();
-      return txt + "\n\n" + (en
+      var prA = [];
+      for(var z2=0;z2<sel.length;z2++) prA.push([sel[z2][0], sel[z2][1]]);
+      return txt + "\n🐾\n\n" + (en
         ? "For the owner — paste this code in your Buddy app:"
-        : "Voor het baasje — plak deze code in je Buddy-app:") + "\nAF-" + afLink().split("#af=")[1] + "\n🐾";
+        : "Voor het baasje — plak deze code in je Buddy-app:") +
+        "\n" + kortCode("AF", d.n || "", prA);
     }
 
     function afzeggen(){
@@ -2671,6 +2907,20 @@
           '<div class="naam" style="font-size:28px;">' + T.titel + '</div>' +
           '<div class="sub">' + T.sub + '</div>' +
         '</header>' + rijen +
+        (function(){
+          var s = statusNu(en);
+          if(!s) return "";
+          var kl = s.k === "nu" ? "var(--groen-bg)" : (s.k === "bijna" ? "var(--oranje-bg)" : "var(--tip-bg)");
+          var fg = s.k === "nu" ? "var(--groen-fg)" : (s.k === "bijna" ? "var(--oranje-fg)" : "var(--ink)");
+          return '<div style="background:' + kl + ';color:' + fg + ';border-radius:12px;padding:13px 15px;font-weight:800;text-align:center;margin-bottom:14px;">' + s.tekst + '</div>';
+        })() +
+        (d.z ? '<button class="knop licht" id="mijn-zorg" style="margin-bottom:10px;">🍽 ' + (en ? "Feeding & care" : "Eten & zorg bekijken") + '</button>' : '') +
+        (function(){
+          if(!zorgD) return "";
+          var knoppen = '<a class="knop licht klein" style="flex:1;text-decoration:none;" href="tel:070245245">☎ ' + (en ? "Poison centre" : "Antigifcentrum") + '</a>';
+          if(zorgD.a) knoppen = '<a class="knop licht klein" style="flex:1;text-decoration:none;" href="tel:' + zorgD.a.replace(/[^+0-9]/g,"") + '">☎ ' + (en ? "Vet" : "Dierenarts") + '</a>' + knoppen;
+          return '<div style="display:flex;gap:8px;margin-bottom:14px;">' + knoppen + '</div>';
+        })() +
         (verzonden
           ? '<div class="tip"><b>' + T.klaar + '</b></div>'
           : '<div class="kaart"><div class="body">' +
@@ -2680,6 +2930,7 @@
               '<p style="font-size:12.5px;color:var(--soft);margin-top:9px;">' + T.stuurUitleg + '</p>' +
             '</div></div>' +
             '<div class="tip">' + T.anders + '</div>') +
+        hintBlok(en) + verseBlok(en) +
         '<footer>Buddy-app</footer>';
       document.getElementById("t-nl").addEventListener("click", function(){ taal = "nl"; render(); });
       document.getElementById("t-en").addEventListener("click", function(){ taal = "en"; render(); });
@@ -2687,6 +2938,28 @@
       if(om) om.addEventListener("input", function(){ opm = this.value; });
       var ab = document.getElementById("mijn-af");
       if(ab) ab.addEventListener("click", afzeggen);
+      var tw = document.getElementById("thuis-weg");
+      if(tw) tw.addEventListener("click", function(){
+        try{ localStorage.setItem("buddy.tip.thuis","1"); }catch(e){}
+        var b = document.getElementById("thuis-tip"); if(b) b.style.display = "none";
+      });
+      var vu = document.getElementById("vraag-update");
+      if(vu) vu.addEventListener("click", function(){
+        var vraag = taal === "en"
+          ? "Hi! Could you send me an updated Buddy link? Mine is from " + mnd(un6(d.s), true) + "."
+          : "Hoi! Kan je me een nieuwe Buddy-link sturen? De mijne is van " + mnd(un6(d.s), false) + ".";
+        if(navigator.share){ navigator.share({text:vraag}).catch(function(){}); return; }
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(vraag).then(function(){ melden(taal==="en" ? "Copied — send it to the owner" : "Gekopieerd — stuur het naar het baasje"); }).catch(function(){ prompt("", vraag); });
+          return;
+        }
+        prompt("", vraag);
+      });
+      var zk = document.getElementById("mijn-zorg");
+      if(zk) zk.addEventListener("click", function(){
+        location.hash = "z=" + b64uEnc(JSON.stringify(d.z));
+        location.reload();
+      });
       var vakjes = document.querySelectorAll('input[data-a]');
       Array.prototype.forEach.call(vakjes, function(v){
         v.addEventListener("change", function(){ afKeuze[+this.dataset.a] = this.checked; });
@@ -2737,9 +3010,11 @@
 
   function oppasBoot(){
     var hsh = location.hash || "";
-    if(hsh.indexOf("#oppas=") !== 0) return false;
+    var kort2 = hsh.indexOf("#z=") === 0, lang2 = hsh.indexOf("#oppas=") === 0;
+    if(!kort2 && !lang2) return false;
     var d;
-    try{ d = JSON.parse(b64uDec(hsh.slice(7))); }catch(e){ return false; }
+    try{ d = normZorg(JSON.parse(b64uDec(hsh.slice(kort2 ? 3 : 7)))); }catch(e){ return false; }
+    if(!d) return false;
     var taal = "nl", ovKcal = "";
     var fotoSrc2 = "";
     try{ var fe2 = document.getElementById("pas-foto"); if(fe2) fotoSrc2 = fe2.getAttribute("src") || ""; }catch(e0){}
@@ -2751,8 +3026,27 @@
       gEl.textContent = rond5((d.k / (kc/100)) / 2);
       uit.style.display = "block";
     }
+    function nuLabel(en){
+      var u = new Date().getHours();
+      return u < 14
+        ? {och: en ? " · next" : " · nu", av: ""}
+        : {och: "", av: en ? " · next" : " · nu"};
+    }
+    function zorgHint(en){
+      try{ if(localStorage.getItem("buddy.tip.thuis") === "1") return ""; }catch(e){}
+      var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent || "");
+      return '<div class="tip" id="thuis-tip2" style="position:relative;">' +
+               '<button id="thuis-weg2" aria-label="Sluiten" style="position:absolute;right:8px;top:6px;border:none;background:none;color:var(--soft);font-size:17px;cursor:pointer;">&times;</button>' +
+               '<b>' + (en ? "Keep this handy" : "Houd dit bij de hand") + '</b><br>' +
+               (en
+                 ? (iOS ? "Tap Share below and choose <b>Add to Home Screen</b>." : "Open the browser menu and choose <b>Add to home screen</b>.")
+                 : (iOS ? "Tik onderaan op het deel-icoon en kies <b>Zet op beginscherm</b>." : "Open het browsermenu en kies <b>Toevoegen aan startscherm</b>.")) +
+             '</div>';
+    }
+
     function render(){
       var T = OPPAS_TAAL[taal];
+      var NU = nuLabel(taal === "en");
       var mh = "";
       for(var i=0;i<(d.m||[]).length;i++){
         mh += '<div class="portie"><span class="g">' + d.m[i][1] + '</span><span class="wat">' + T.gram + ' ' + esc(d.m[i][0]) + '</span></div>';
@@ -2771,9 +3065,9 @@
           '<div class="naam">' + T.titel + ' ' + esc(d.n) + '</div>' +
           '<div class="sub">' + esc(d.r||"") + ' — ' + T.sub + '</div>' +
         '</header>' +
-        '<div class="kaart ochtend"><div class="kop"><span>' + T.ocht + '</span></div><div class="body">' + mh +
+        '<div class="kaart ochtend"><div class="kop"><span>' + T.ocht + NU.och + '</span></div><div class="body">' + mh +
           '<div class="voet"><b>+ ' + d.o + ' ' + T.olie + '</b><br>' + T.meng + '</div></div></div>' +
-        '<div class="kaart avond"><div class="kop"><span>' + T.av + '</span></div><div class="body">' + mh +
+        '<div class="kaart avond"><div class="kop"><span>' + T.av + NU.av + '</span></div><div class="body">' + mh +
           '<div class="voet"><b>' + T.geenolie + '</b><br>' + T.meng + '</div></div></div>' +
         (d.k ? '<h2>' + T.ander + '</h2><div class="kaart"><div class="body">' +
           '<p style="font-size:13.5px;color:var(--soft);margin-bottom:10px;">' + T.anderUitleg + '</p>' +
@@ -2791,9 +3085,15 @@
           (d.c ? '<div class="vac-rij"><div><div class="vac-naam">' + T.chip + '</div><div class="vac-sub">' + esc(d.c) + '</div></div></div>' : "") +
         '</div></div>' +
         (d.t ? '<h2>' + T.notities + '</h2><div class="kaart"><div class="body" style="font-size:15px;white-space:pre-wrap;">' + esc(d.t) + '</div></div>' : "") +
+        zorgHint(taal === "en") +
         '<footer>Buddy-app</footer>';
       document.getElementById("t-nl").addEventListener("click", function(){ taal = "nl"; render(); });
       document.getElementById("t-en").addEventListener("click", function(){ taal = "en"; render(); });
+      var tw2 = document.getElementById("thuis-weg2");
+      if(tw2) tw2.addEventListener("click", function(){
+        try{ localStorage.setItem("buddy.tip.thuis","1"); }catch(e){}
+        var b = document.getElementById("thuis-tip2"); if(b) b.style.display = "none";
+      });
       var ov = document.getElementById("ov-kcal");
       if(ov){
         ov.value = ovKcal;
@@ -2832,6 +3132,62 @@
   });
   tekenAlles();
   acceptBoot();
+
+  /* ---------- vernieuwen ---------- */
+  function verversen(){
+    var t = $("ptr-tekst");
+    if(t) t.textContent = "Vernieuwen…";
+    melden("Vernieuwen…");
+    // querystring erbij: dwingt iOS om het nieuwste bestand op te halen i.p.v. de cache
+    try{ location.replace(location.pathname + "?v=" + Date.now()); }
+    catch(e){ try{ location.reload(); }catch(e2){} }
+  }
+  $("ververs-knop").addEventListener("click", verversen);
+
+  $("thema-keuze").addEventListener("click", function(e){
+    var b = e.target.closest("button[data-thema]"); if(!b) return;
+    state.thema = b.dataset.thema;
+    bewaar(); pasThemaToe();
+  });
+  if(window.matchMedia){
+    try{
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function(){
+        if((state.thema || "auto") === "auto") pasThemaToe();
+      });
+    }catch(e){}
+  }
+  pasThemaToe();
+
+  var ptrStart = 0, ptrBezig = false, ptrAfstand = 0;
+  var DREMPEL = 75;
+  function ptrToon(d){
+    var el = $("ptr"); if(!el) return;
+    if(d <= 0){ el.style.opacity = "0"; el.style.transform = "translate(-50%,-60px)"; return; }
+    var v = Math.min(d, 110);
+    el.style.opacity = String(Math.min(1, v/DREMPEL));
+    el.style.transform = "translate(-50%," + Math.min(v * 0.55, 46) + "px)";
+    $("ptr-tekst").textContent = v >= DREMPEL ? "Loslaten om te vernieuwen" : "Trek verder om te vernieuwen";
+  }
+  document.addEventListener("touchstart", function(e){
+    if(e.touches.length !== 1 || (window.scrollY || window.pageYOffset || 0) > 0){ ptrBezig = false; return; }
+    ptrStart = e.touches[0].clientY;
+    ptrAfstand = 0;
+    ptrBezig = true;
+  }, {passive:true});
+  document.addEventListener("touchmove", function(e){
+    if(!ptrBezig) return;
+    if((window.scrollY || window.pageYOffset || 0) > 0){ ptrBezig = false; ptrToon(0); return; }
+    ptrAfstand = e.touches[0].clientY - ptrStart;
+    ptrToon(ptrAfstand);
+  }, {passive:true});
+  function ptrEinde(){
+    if(!ptrBezig) return;
+    ptrBezig = false;
+    if(ptrAfstand >= DREMPEL){ verversen(); return; }
+    ptrToon(0);
+  }
+  document.addEventListener("touchend", ptrEinde, {passive:true});
+  document.addEventListener("touchcancel", ptrEinde, {passive:true});
 })();
 </script>
 </body>
