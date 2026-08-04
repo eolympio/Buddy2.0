@@ -241,6 +241,9 @@
   .kal button.leeg{visibility:hidden;}
   .kal button.weg{background:var(--vlieg);border-color:var(--vlieg);color:#fff;}
   .kal button.vandaag{border-color:var(--ochtend);border-width:3px;}
+  .kal button.mijn{background:var(--avond);border-color:var(--avond);color:#fff;}
+  .kal button.mijn-half{border-color:var(--avond);color:var(--ink);}
+  .kal.lees button{cursor:default;}
   .kal button.start{background:var(--vlieg)!important;border-color:var(--vlieg)!important;color:#fff!important;box-shadow:0 0 0 3px rgba(0,50,160,.25);}
   .kal button.start::after{content:"";position:absolute;}
   .trip-blok{padding:13px 0;border-bottom:1px solid var(--line);}
@@ -2686,7 +2689,7 @@
         '<div class="kaart"><div class="body">' +
           '<div class="veldrij"><label>' + T.naam + '</label><input id="vr-naam" type="text" value="' + esc(naamW) + '"></div>' +
           '<div class="veldrij"><label>' + T.opm + '</label><textarea id="vr-opm" rows="2">' + esc(opm) + '</textarea></div>' +
-          rijen +
+        rijen +
           '<div style="height:12px;"></div>' +
           '<button class="knop" id="vr-stuur"' + (verzondenOk ? ' disabled' : '') + '>' + (verzondenOk ? (taal==="en" ? "✅ Sent!" : "✅ Verstuurd!") : T.stuur) + '</button>' +
           (d.f ? '<button class="link-knop" id="vr-deel-zelf" style="margin-top:10px;">' + (taal==="en" ? "Prefer to send it yourself via WhatsApp?" : "Liever zelf via WhatsApp sturen?") + '</button>' : '') +
@@ -2881,6 +2884,59 @@
 
     var zorgD = d.z ? normZorg(d.z) : null;
 
+    var MND_VOL_EN = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    var mijnJaar, mijnMaand;
+    (function(){
+      var vd = vandaag(), basis = null;
+      for(var i=0;i<d.t.length;i++){
+        var t = d.t[i];
+        if(t[1] >= vd && (!basis || t[0] < basis)) basis = t[0];
+      }
+      if(!basis) basis = d.t[0] ? d.t[0][0] : vd;
+      mijnJaar = parseInt(basis.slice(0,4),10);
+      mijnMaand = parseInt(basis.slice(5,7),10) - 1;
+    })();
+
+    function kalenderBlok(en){
+      var mijn = {}, half = {}, code = {};
+      for(var i=0;i<d.t.length;i++){
+        var t = d.t[i];
+        for(var dd = t[0]; dd <= t[1]; dd = plusDagen(dd, 1)) mijn[dd] = 1;
+        if(t[3] === "och" || t[3] === "mid") half[t[1]] = 1;
+        if(t[2]) code[t[0]] = esc(String(t[2]).trim().slice(0,3).toUpperCase());
+      }
+      var eerste = new Date(mijnJaar, mijnMaand, 1);
+      var offset = (eerste.getDay()+6)%7;
+      var dagenIn = new Date(mijnJaar, mijnMaand+1, 0).getDate();
+      var wd = en ? ["M","T","W","T","F","S","S"] : ["M","D","W","D","V","Z","Z"];
+      var h = "";
+      for(var a=0;a<7;a++) h += '<div class="wd">' + wd[a] + '</div>';
+      for(var o=0;o<offset;o++) h += '<button class="leeg" tabindex="-1"></button>';
+      var vd2 = vandaag();
+      for(var dag=1; dag<=dagenIn; dag++){
+        var iso = mijnJaar + "-" + (mijnMaand+1 < 10 ? "0" : "") + (mijnMaand+1) + "-" + (dag < 10 ? "0" : "") + dag;
+        var cls = [];
+        if(mijn[iso]) cls.push(half[iso] ? "mijn-half" : "mijn");
+        if(iso === vd2) cls.push("vandaag");
+        var stl = (mijn[iso] && half[iso])
+          ? ' style="background:linear-gradient(135deg,var(--avond) 0 46%,var(--kaart) 46% 100%);"' : '';
+        h += '<button class="' + cls.join(" ") + '" disabled' + stl + '><span>' + dag + '</span>' +
+             (code[iso] ? '<span class="kal-best">' + code[iso] + '</span>' : '') + '</button>';
+      }
+      var titel = (en ? MND_VOL_EN[mijnMaand] : MAAND_VOL[mijnMaand]) + " " + mijnJaar;
+      return '<div class="kaart"><div class="body">' +
+               '<div class="kal-kop">' +
+                 '<button class="kal-nav" id="mk-vorige" aria-label="&#8249;">&#8249;</button>' +
+                 '<span class="titel">' + titel + '</span>' +
+                 '<button class="kal-nav" id="mk-volgende" aria-label="&#8250;">&#8250;</button>' +
+               '</div>' +
+               '<div class="kal lees">' + h + '</div>' +
+               '<p style="font-size:12.5px;color:var(--soft);margin-top:10px;">' +
+                 (en ? "Green = your days. Half-filled = the day the owner is back."
+                     : "Groen = jouw dagen. Schuin gevuld = de dag dat het baasje terugkomt.") + '</p>' +
+             '</div></div>';
+    }
+
     function statusNu(en){
       var vd = vandaag(), eerst = null, actief = null, alles = true;
       for(var i=0;i<d.t.length;i++){
@@ -3040,6 +3096,7 @@
           var fg = s.k === "nu" ? "var(--groen-fg)" : (s.k === "bijna" ? "var(--oranje-fg)" : "var(--ink)");
           return '<div style="background:' + kl + ';color:' + fg + ';border-radius:12px;padding:13px 15px;font-weight:800;text-align:center;margin-bottom:14px;">' + s.tekst + '</div>';
         })() +
+        kalenderBlok(en) +
         rijen +
         (d.z ? '<button class="knop licht" id="mijn-zorg" style="margin-bottom:10px;">🍽 ' + (en ? "Feeding & care" : "Eten & zorg bekijken") + '</button>' : '') +
         (function(){
@@ -3081,6 +3138,16 @@
       if(om) om.addEventListener("input", function(){ opm = this.value; });
       var ab = document.getElementById("mijn-af");
       if(ab) ab.addEventListener("click", afzeggen);
+      var mkv = document.getElementById("mk-vorige");
+      if(mkv) mkv.addEventListener("click", function(){
+        mijnMaand--; if(mijnMaand < 0){ mijnMaand = 11; mijnJaar--; }
+        render();
+      });
+      var mkn = document.getElementById("mk-volgende");
+      if(mkn) mkn.addEventListener("click", function(){
+        mijnMaand++; if(mijnMaand > 11){ mijnMaand = 0; mijnJaar++; }
+        render();
+      });
       var bo = document.getElementById("bij-open");
       if(bo) bo.addEventListener("click", function(){
         var k = document.getElementById("bij-kaart");
