@@ -65,7 +65,7 @@
   }
   .app{max-width:520px;margin:0 auto;padding:0 16px;}
 
-  header{text-align:center;padding:calc(22px + env(safe-area-inset-top)) 0 16px;}
+  header{text-align:center;padding:calc(22px + env(safe-area-inset-top)) 0 16px;position:relative;}
   .naam{font-family:"Fraunces",Georgia,serif;font-weight:900;font-size:34px;line-height:1;letter-spacing:-.02em;}
   .sub{font-size:13px;color:var(--soft);font-weight:600;margin-top:4px;}
 
@@ -2501,6 +2501,7 @@
     }catch(e){ return false; }
     if(!d || !Array.isArray(d.t)) return false;
 
+    deelSetup((d.n || "Buddy") + " — oppas");
     var taal = "nl", naamW = "", keuze = {}, opm = "";
     var fotoSrc = "";
     try{ var fe = document.getElementById("pas-foto"); if(fe) fotoSrc = fe.getAttribute("src") || ""; }catch(e0){}
@@ -2658,6 +2659,32 @@
     return true;
   }
 
+  /* ---------- gedeelde pagina's: eigen app-identiteit ---------- */
+  var DEEL_SLEUTEL = "buddy.oppaslink";
+
+  function deelSetup(titel){
+    // Manifest weghalen: anders gebruikt iOS start_url en verdwijnt de link bij
+    // "Zet op beginscherm" — de oppas zou dan de app van het baasje openen.
+    var mf = document.querySelector('link[rel="manifest"]');
+    if(mf && mf.parentNode) mf.parentNode.removeChild(mf);
+    var tt = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if(tt) tt.setAttribute("content", titel || "Oppas");
+    document.title = titel || "Oppas";
+    try{
+      if(!localStorage.getItem("buddy.v2") && location.hash) localStorage.setItem(DEEL_SLEUTEL, location.hash);
+    }catch(e){}
+  }
+
+  // Router voor de gedeelde pagina's: terug-knop en Safari-terug werken hierdoor.
+  function deelRouter(){
+    window.addEventListener("popstate", function(){
+      var h = location.hash || "";
+      if(h.indexOf("#z=") === 0 || h.indexOf("#oppas=") === 0){ oppasBoot(); return; }
+      if(h.indexOf("#a=") === 0 || h.indexOf("#mijn=") === 0){ mijnBoot(); return; }
+      if(h.indexOf("#v=") === 0 || h.indexOf("#vraag=") === 0){ vraagBoot(); return; }
+    });
+  }
+
   /* ---------- code-link geopend zonder gegevens (verkeerde app) ---------- */
   function codeBoot(){
     var hsh = location.hash || "";
@@ -2719,6 +2746,7 @@
     }catch(e){ return false; }
     if(!d || !Array.isArray(d.t) || !d.t.length) return false;
 
+    deelSetup((d.h || "Buddy") + " — oppas");
     var taal = "nl", opm = "", verzonden = false, afKeuze = {};
     var fotoSrc3 = "";
     try{ var fe3 = document.getElementById("pas-foto"); if(fe3) fotoSrc3 = fe3.getAttribute("src") || ""; }catch(e0){}
@@ -2957,8 +2985,14 @@
       });
       var zk = document.getElementById("mijn-zorg");
       if(zk) zk.addEventListener("click", function(){
-        location.hash = "z=" + b64uEnc(JSON.stringify(d.z));
-        location.reload();
+        var terug = location.hash;
+        try{
+          history.pushState({terug:terug}, "", "#z=" + b64uEnc(JSON.stringify(d.z)));
+          oppasBoot();
+        }catch(e){
+          location.hash = "z=" + b64uEnc(JSON.stringify(d.z));
+          location.reload();
+        }
       });
       var vakjes = document.querySelectorAll('input[data-a]');
       Array.prototype.forEach.call(vakjes, function(v){
@@ -3015,6 +3049,7 @@
     var d;
     try{ d = normZorg(JSON.parse(b64uDec(hsh.slice(kort2 ? 3 : 7)))); }catch(e){ return false; }
     if(!d) return false;
+    deelSetup(esc(d.n || "Buddy"));
     var taal = "nl", ovKcal = "";
     var fotoSrc2 = "";
     try{ var fe2 = document.getElementById("pas-foto"); if(fe2) fotoSrc2 = fe2.getAttribute("src") || ""; }catch(e0){}
@@ -3055,8 +3090,11 @@
       for(var j=0;j<T.stappen.length;j++) st += "<li>" + T.stappen[j] + "</li>";
       var nlst = "";
       for(var k=0;k<T.nooitLijst.length;k++) nlst += "<li>" + T.nooitLijst[k] + "</li>";
+      var kanTerug = false;
+      try{ kanTerug = !!(history.state && history.state.terug); }catch(e){}
       document.querySelector(".app").innerHTML =
         '<header style="text-align:center;">' +
+          (kanTerug ? '<button class="knop licht klein" id="zorg-terug" style="width:auto;padding:0 14px;position:absolute;left:16px;top:calc(20px + env(safe-area-inset-top));">&#8592; ' + (taal==="en" ? "Back" : "Terug") + '</button>' : '') +
           '<div style="display:flex;justify-content:center;gap:6px;margin-bottom:14px;">' +
             '<button class="knop licht klein" id="t-nl" style="width:auto;padding:0 18px;' + (taal==="nl" ? 'background:var(--ink);color:var(--paper);' : '') + '">NL</button>' +
             '<button class="knop licht klein" id="t-en" style="width:auto;padding:0 18px;' + (taal==="en" ? 'background:var(--ink);color:var(--paper);' : '') + '">EN</button>' +
@@ -3089,6 +3127,8 @@
         '<footer>Buddy-app</footer>';
       document.getElementById("t-nl").addEventListener("click", function(){ taal = "nl"; render(); });
       document.getElementById("t-en").addEventListener("click", function(){ taal = "en"; render(); });
+      var zt = document.getElementById("zorg-terug");
+      if(zt) zt.addEventListener("click", function(){ history.back(); });
       var tw2 = document.getElementById("thuis-weg2");
       if(tw2) tw2.addEventListener("click", function(){
         try{ localStorage.setItem("buddy.tip.thuis","1"); }catch(e){}
@@ -3113,7 +3153,16 @@
     if(f) importeer(f);
   });
 
-  if(oppasBoot() || vraagBoot() || mijnBoot() || codeBoot()) return;
+  // Als iOS de link toch kwijtraakt: de oppas krijgt zijn eigen pagina terug.
+  (function(){
+    try{
+      if(location.hash || localStorage.getItem("buddy.v2")) return;
+      var opgeslagen = localStorage.getItem(DEEL_SLEUTEL);
+      if(opgeslagen) history.replaceState(null, "", opgeslagen);
+    }catch(e){}
+  })();
+
+  if(oppasBoot() || vraagBoot() || mijnBoot() || codeBoot()){ deelRouter(); return; }
 
   laad();
   $("oppas-notities").value = state.oppas.notities || "";
