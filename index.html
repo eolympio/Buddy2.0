@@ -525,6 +525,15 @@
 
     <div id="rooster-nudge" class="tip" style="display:none;"></div>
 
+    <button class="knop licht klein" id="plak-toggle" style="margin-bottom:14px;">📩 Antwoord van een oppasser invoeren</button>
+    <div id="plak-kaart" class="kaart" style="display:none;"><div class="body">
+      <p style="font-size:13px;color:var(--soft);margin-bottom:10px;">Kopieer de code (of de hele link) uit het bericht van je oppas en plak die hier. De dagen worden dan meteen in jouw agenda gezet.</p>
+      <div class="veldrij"><label>Code of link</label><textarea id="plak-veld" rows="2" placeholder="OK-… of AF-…"></textarea></div>
+      <button class="knop" id="plak-lees">📋 Plakken uit klembord</button>
+      <div style="height:8px;"></div>
+      <button class="knop licht" id="plak-verwerk">Verwerken</button>
+    </div></div>
+
     <h2>Vluchten &amp; oppas</h2>
     <div class="kaart"><div class="body" id="trips-lijst"></div></div>
     <p style="font-size:12.5px;color:var(--soft);margin-top:8px;">Tik op een vlucht om bestemming, terugkomst en oppas in te stellen — één tik op een naam en het is geregeld.</p>
@@ -1628,16 +1637,6 @@
   /* ---------- rooster ---------- */
   var MAAND_VOL = ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
   var DAGDEEL = {och:"'s ochtends", mid:"'s middags", av:"'s avonds", nacht:"'s nachts"};
-  // Logo van de werkgever — alleen getoond als het werkveld overeenkomt (persoonlijke versie)
-  var WERK_LOGOS = [
-    {test:/brussels\s*airlines/i, src:"data:image/png;base64,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", alt:"Brussels Airlines"}
-  ];
-  function werkLogo(){
-    var wk = state.profiel.werk || "";
-    for(var i=0;i<WERK_LOGOS.length;i++){ if(WERK_LOGOS[i].test.test(wk)) return WERK_LOGOS[i]; }
-    return null;
-  }
-
   var SITTER_PALET = ["#3E8E5A","#8A4FBF","#D4557A","#1FA0A8","#C86A2B","#6B7F2E","#B03A3A","#7A4A2B"];
   function sitterKleur(naam){
     var s = 0;
@@ -1726,14 +1725,8 @@
     var titel = $("kal-titel"); if(!titel) return;
     var rw = $("rooster-werk");
     if(rw){
-      var lg2 = werkLogo();
-      if(lg2){
-        rw.style.display = "block";
-        rw.innerHTML = '<img src="' + lg2.src + '" alt="' + esc(lg2.alt) + '" style="height:26px;width:auto;display:block;margin:0 0 10px;">';
-      } else if(state.profiel.werk){
-        rw.style.display = "block";
-        rw.textContent = "✈ " + state.profiel.werk;
-      } else rw.style.display = "none";
+      if(state.profiel.werk){ rw.style.display = "block"; rw.textContent = "✈ " + state.profiel.werk; }
+      else rw.style.display = "none";
     }
     titel.textContent = MAAND_VOL[roosterMaand] + " " + roosterJaar;
     var eerste = new Date(roosterJaar, roosterMaand, 1);
@@ -2121,6 +2114,18 @@
   });
 
   var acceptPending = null;
+  // haalt "ok"/"af" + payload uit een link, een code of geplakte tekst
+  function leesAntwoord(tekst){
+    if(!tekst) return null;
+    var s = String(tekst).trim();
+    var m = s.match(/[#?]?(ok|af)[=\-]([A-Za-z0-9_\-]{8,})/i);
+    if(!m) return null;
+    var qd;
+    try{ qd = JSON.parse(b64uDec(m[2])); }catch(e){ return null; }
+    if(!qd || !qd.n || !Array.isArray(qd.t) || !qd.t.length) return null;
+    return {modus:m[1].toLowerCase(), qd:qd};
+  }
+
   function acceptBoot(){
     var hsh = location.hash || "";
     var modus = hsh.indexOf("#ok=") === 0 ? "ok" : (hsh.indexOf("#af=") === 0 ? "af" : null);
@@ -2128,6 +2133,11 @@
     var qd;
     try{ qd = JSON.parse(b64uDec(hsh.slice(4))); }catch(e){ return; }
     if(!qd || !qd.n || !Array.isArray(qd.t) || !qd.t.length) return;
+    acceptToon(modus, qd);
+    try{ history.replaceState(null, "", location.pathname); }catch(e2){ location.hash = ""; }
+  }
+
+  function acceptToon(modus, qd){
 
     var geldig = [], verlopen = 0;
     var huidige = {};
@@ -2137,7 +2147,7 @@
       var van = qd.t[j][0];
       if(huidige[van]) geldig.push(huidige[van]); else verlopen++;
     }
-    if(!geldig.length && !verlopen) return;
+    if(!geldig.length && !verlopen) return false;
 
     if(modus === "af"){
       geldig = geldig.filter(function(t){
@@ -2187,7 +2197,8 @@
     $("accept-kaart").style.display = "block";
     var knop = document.querySelector('.tabs button[data-p="rooster"]');
     if(knop) knop.click();
-    try{ history.replaceState(null, "", location.pathname); }catch(e2){ location.hash = ""; }
+    try{ $("accept-kaart").scrollIntoView({behavior:"smooth", block:"center"}); }catch(e3){}
+    return true;
   }
 
   function acceptSluit(){
@@ -2214,6 +2225,34 @@
       : n + (n === 1 ? " vlucht" : " vluchten") + " geregeld ✓");
   });
   $("accept-nee").addEventListener("click", acceptSluit);
+
+  $("plak-toggle").addEventListener("click", function(){
+    var pk = $("plak-kaart");
+    pk.style.display = (pk.style.display === "none") ? "block" : "none";
+  });
+  function plakVerwerk(tekst){
+    var r = leesAntwoord(tekst);
+    if(!r){ melden("Geen geldige code gevonden"); return false; }
+    var gelukt = acceptToon(r.modus, r.qd);
+    if(gelukt === false){ melden("Die datums staan niet meer in je agenda"); return false; }
+    $("plak-veld").value = "";
+    $("plak-kaart").style.display = "none";
+    return true;
+  }
+  $("plak-verwerk").addEventListener("click", function(){ plakVerwerk($("plak-veld").value); });
+  $("plak-lees").addEventListener("click", function(){
+    if(navigator.clipboard && navigator.clipboard.readText){
+      navigator.clipboard.readText().then(function(t){
+        if(!plakVerwerk(t)) $("plak-veld").value = t || "";
+      }).catch(function(){
+        melden("Plak de code hieronder in het vakje");
+        $("plak-veld").focus();
+      });
+      return;
+    }
+    melden("Plak de code hieronder in het vakje");
+    $("plak-veld").focus();
+  });
 
   $("vlucht-kaart").addEventListener("click", function(){
     var kn = document.querySelector('.tabs button[data-p="rooster"]');
@@ -2327,7 +2366,11 @@
       var txt = T.hoi(naamW.trim()) + "\n" + (sel.length ? T.kan + "\n• " + sel.join("\n• ") : T.geen);
       if(opm.trim()) txt += "\n💬 " + opm.trim();
       var bl = bevestigLink();
-      if(bl) txt += "\n\n" + (taal==="en" ? "Confirm in one tap:" : "In één tik bevestigen:") + "\n" + bl;
+      if(bl){
+        txt += "\n\n" + (taal==="en"
+          ? "For the owner — paste this code in your Buddy app:"
+          : "Voor het baasje — plak deze code in je Buddy-app:") + "\nOK-" + bl.split("#ok=")[1];
+      }
       return txt + "\n🐾";
     }
     function deelZelf(){
@@ -2351,13 +2394,17 @@
         _subject: (taal==="en" ? "Dog-sitting reply from " : "Oppas-antwoord van ") + naamW.trim(),
         naam: naamW.trim(),
         antwoord: bouwTekst(),
-        bevestig_link: bevestigLink()
+        bevestig_code: bevestigLink() ? "OK-" + bevestigLink().split("#ok=")[1] : ""
       };
-      fetch("https://formspree.io/f/" + encodeURIComponent(d.f), {
-        method:"POST",
-        headers:{"Accept":"application/json","Content-Type":"application/json"},
-        body: JSON.stringify(body)
-      }).then(function(r){
+      var verzoek;
+      try{
+        verzoek = fetch("https://formspree.io/f/" + encodeURIComponent(d.f), {
+          method:"POST",
+          headers:{"Accept":"application/json","Content-Type":"application/json"},
+          body: JSON.stringify(body)
+        });
+      }catch(fe){ verzoek = Promise.reject(fe); }
+      verzoek.then(function(r){
         if(!r.ok) throw new Error("mislukt");
         verzondenOk = true;
         knop.textContent = taal==="en" ? "✅ Sent!" : "✅ Verstuurd!";
@@ -2408,6 +2455,50 @@
       window.scrollTo(0,0);
     }
     render();
+    return true;
+  }
+
+  /* ---------- code-link geopend zonder gegevens (verkeerde app) ---------- */
+  function codeBoot(){
+    var hsh = location.hash || "";
+    var modus = hsh.indexOf("#ok=") === 0 ? "ok" : (hsh.indexOf("#af=") === 0 ? "af" : null);
+    if(!modus) return false;
+    var heeftData = false;
+    try{ heeftData = !!localStorage.getItem("buddy.v2"); }catch(e){}
+    if(heeftData) return false; // dit is de echte app — normale afhandeling
+
+    var code = (modus === "ok" ? "OK-" : "AF-") + hsh.slice(4);
+    var naam = "";
+    try{ naam = (JSON.parse(b64uDec(hsh.slice(4))) || {}).n || ""; }catch(e){}
+
+    document.querySelector(".app").innerHTML =
+      '<header style="text-align:center;">' +
+        '<div class="naam" style="font-size:28px;">Bijna klaar</div>' +
+        '<div class="sub">Dit antwoord hoort in jouw Buddy-app</div>' +
+      '</header>' +
+      '<div class="kaart"><div class="body">' +
+        '<p style="font-size:15px;margin-bottom:12px;">' +
+          (naam ? '<b>' + esc(naam) + '</b> heeft geantwoord. ' : '') +
+          'Je opende deze link in de browser, en daar staan je gegevens niet. Kopieer de code hieronder en open de Buddy-app op je beginscherm.' +
+        '</p>' +
+        '<div style="background:var(--paper);border:2px dashed var(--line);border-radius:10px;padding:12px;font-size:12px;word-break:break-all;font-weight:700;" id="code-vak">' + esc(code) + '</div>' +
+        '<div style="height:12px;"></div>' +
+        '<button class="knop" id="code-kopieer">📋 Code kopiëren</button>' +
+      '</div></div>' +
+      '<ol class="stappen">' +
+        '<li>Tik op <b>Code kopiëren</b>.</li>' +
+        '<li>Open de <b>Buddy-app</b> op je beginscherm.</li>' +
+        '<li>Ga naar <b>Rooster</b> → <b>Antwoord van een oppasser invoeren</b> → <b>Plakken uit klembord</b>.</li>' +
+      '</ol>' +
+      '<footer>Buddy-app</footer>';
+
+    document.getElementById("code-kopieer").addEventListener("click", function(){
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(code).then(function(){ melden("Code gekopieerd"); }).catch(function(){ prompt("Kopieer de code:", code); });
+        return;
+      }
+      prompt("Kopieer de code:", code);
+    });
     return true;
   }
 
@@ -2478,7 +2569,9 @@
       for(var i=0;i<d.t.length;i++) regels.push(periode(d.t[i], en) + (d.t[i][2] ? " · " + d.t[i][2] : ""));
       var txt = (d.n ? d.n + ": " : "") + T.hoi + "\n• " + regels.join("\n• ");
       if(opm.trim()) txt += "\n💬 " + opm.trim();
-      return txt + "\n\n" + (en ? "Free up these days in one tap:" : "In één tik weer vrijgeven:") + "\n" + afLink() + "\n🐾";
+      return txt + "\n\n" + (en
+        ? "For the owner — paste this code in your Buddy app:"
+        : "Voor het baasje — plak deze code in je Buddy-app:") + "\nAF-" + afLink().split("#af=")[1] + "\n🐾";
     }
 
     function afzeggen(){
@@ -2493,11 +2586,15 @@
         var knop = document.getElementById("mijn-af");
         knop.disabled = true;
         knop.textContent = taal==="en" ? "Sending…" : "Versturen…";
-        fetch("https://formspree.io/f/" + encodeURIComponent(d.f), {
-          method:"POST",
-          headers:{"Accept":"application/json","Content-Type":"application/json"},
-          body: JSON.stringify({_subject:(taal==="en" ? "Cancellation from " : "Afzegging van ") + (d.n||""), naam:d.n||"", antwoord:txt})
-        }).then(function(r){
+        var vz;
+        try{
+          vz = fetch("https://formspree.io/f/" + encodeURIComponent(d.f), {
+            method:"POST",
+            headers:{"Accept":"application/json","Content-Type":"application/json"},
+            body: JSON.stringify({_subject:(taal==="en" ? "Cancellation from " : "Afzegging van ") + (d.n||""), naam:d.n||"", antwoord:txt})
+          });
+        }catch(fe2){ vz = Promise.reject(fe2); }
+        vz.then(function(r){
           if(!r.ok) throw new Error("x");
           klaar();
           melden(taal==="en" ? "The owner has been notified" : "De eigenaar is verwittigd");
@@ -2672,7 +2769,7 @@
     if(f) importeer(f);
   });
 
-  if(oppasBoot() || vraagBoot() || mijnBoot()) return;
+  if(oppasBoot() || vraagBoot() || mijnBoot() || codeBoot()) return;
 
   laad();
   $("oppas-notities").value = state.oppas.notities || "";
