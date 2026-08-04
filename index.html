@@ -203,6 +203,8 @@
   .kal button.leeg{visibility:hidden;}
   .kal button.weg{background:var(--vlieg);border-color:var(--vlieg);color:#fff;}
   .kal button.vandaag{border-color:var(--ochtend);border-width:3px;}
+  .kal button.start{background:var(--vlieg)!important;border-color:var(--vlieg)!important;color:#fff!important;box-shadow:0 0 0 3px rgba(0,50,160,.25);}
+  .kal button.start::after{content:"";position:absolute;}
   .trip-blok{padding:13px 0;border-bottom:1px solid var(--line);}
   .trip-blok:last-child{border-bottom:none;}
   .trip-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
@@ -517,7 +519,7 @@
         <button class="kal-nav" id="kal-volgende" aria-label="Volgende maand">&#8250;</button>
       </div>
       <div class="kal" id="kal-grid"></div>
-      <p style="font-size:12.5px;color:var(--soft);margin-top:10px;">Tik op de dagen dat je vliegt. Blauw = nog geen oppas, kleur = geregeld, schuin gevuld = die dag kom je terug.</p>
+      <p id="kal-hint" style="font-size:12.5px;color:var(--soft);margin-top:10px;">Tik op de eerste dag van je reis, daarna op de laatste. Eén dag? Tik twee keer op dezelfde dag.</p>
       <div id="kal-legende" style="display:none;margin-top:6px;font-size:12.5px;font-weight:800;"></div>
     </div></div>
 
@@ -1626,6 +1628,16 @@
   /* ---------- rooster ---------- */
   var MAAND_VOL = ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
   var DAGDEEL = {och:"'s ochtends", mid:"'s middags", av:"'s avonds", nacht:"'s nachts"};
+  // Logo van de werkgever — alleen getoond als het werkveld overeenkomt (persoonlijke versie)
+  var WERK_LOGOS = [
+    {test:/brussels\s*airlines/i, src:"data:image/png;base64,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", alt:"Brussels Airlines"}
+  ];
+  function werkLogo(){
+    var wk = state.profiel.werk || "";
+    for(var i=0;i<WERK_LOGOS.length;i++){ if(WERK_LOGOS[i].test.test(wk)) return WERK_LOGOS[i]; }
+    return null;
+  }
+
   var SITTER_PALET = ["#3E8E5A","#8A4FBF","#D4557A","#1FA0A8","#C86A2B","#6B7F2E","#B03A3A","#7A4A2B"];
   function sitterKleur(naam){
     var s = 0;
@@ -1676,6 +1688,7 @@
   var nu0 = new Date();
   var roosterJaar = nu0.getFullYear(), roosterMaand = nu0.getMonth();
   var openTrip = null;
+  var kiesStart = null; // eerste dag van een reeks die nog gekozen wordt
 
   function pad2(n){ return (n<10?"0":"") + n; }
 
@@ -1713,8 +1726,14 @@
     var titel = $("kal-titel"); if(!titel) return;
     var rw = $("rooster-werk");
     if(rw){
-      if(state.profiel.werk){ rw.style.display = "block"; rw.textContent = "✈ " + state.profiel.werk; }
-      else rw.style.display = "none";
+      var lg2 = werkLogo();
+      if(lg2){
+        rw.style.display = "block";
+        rw.innerHTML = '<img src="' + lg2.src + '" alt="' + esc(lg2.alt) + '" style="height:26px;width:auto;display:block;margin:0 0 10px;">';
+      } else if(state.profiel.werk){
+        rw.style.display = "block";
+        rw.textContent = "✈ " + state.profiel.werk;
+      } else rw.style.display = "none";
     }
     titel.textContent = MAAND_VOL[roosterMaand] + " " + roosterJaar;
     var eerste = new Date(roosterJaar, roosterMaand, 1);
@@ -1740,6 +1759,7 @@
       var cls = [];
       if(state.rooster.weg[iso]) cls.push("weg");
       if(iso === vd) cls.push("vandaag");
+      if(iso === kiesStart) cls.push("start");
       var stl = "";
       if(state.rooster.weg[iso]){
         var kkl = kleurVan[iso] || "";
@@ -1766,6 +1786,14 @@
           return '<span style="color:' + legende[nm] + ';margin-right:12px;white-space:nowrap;">&#9679; ' + esc(nm) + '</span>';
         }).join("");
       } else lg.style.display = "none";
+    }
+    var hint = $("kal-hint");
+    if(hint){
+      if(kiesStart){
+        hint.innerHTML = '<b style="color:var(--vlieg);">Tik nu op de laatste dag van je reis.</b><br>Zelfde dag = reis van één dag. Tik op een blauwe reis om die te wissen.';
+      } else {
+        hint.innerHTML = 'Tik op de eerste dag van je reis, daarna op de laatste. Eén dag? Tik twee keer op dezelfde dag.<br>Blauw = nog geen oppas, kleur = geregeld, schuin gevuld = die dag kom je terug.';
+      }
     }
     tekenTrips();
     tekenMensen();
@@ -1905,12 +1933,52 @@
     roosterMaand++; if(roosterMaand > 11){ roosterMaand = 0; roosterJaar++; }
     tekenRooster();
   });
+  function dagenTussen(a, b){ return Math.round((isoNaarDate(b) - isoNaarDate(a))/86400000) + 1; }
+
   $("kal-grid").addEventListener("click", function(e){
     var b = e.target.closest("button[data-d]"); if(!b) return;
     var iso = b.dataset.d;
-    if(state.rooster.weg[iso]) delete state.rooster.weg[iso];
-    else state.rooster.weg[iso] = 1;
-    bewaar(); tekenRooster(); tekenVlucht();
+
+    // tweede tik: reeks afsluiten
+    if(kiesStart){
+      var van = kiesStart, tot = iso;
+      if(tot < van){ var tmp = van; van = tot; tot = tmp; }
+      var n = dagenTussen(van, tot);
+      if(n > 30 && !confirm("Dat is een reeks van " + n + " dagen. Toch toevoegen?")){
+        kiesStart = null; tekenRooster();
+        return;
+      }
+      for(var d = van; d <= tot; d = plusDagen(d, 1)) state.rooster.weg[d] = 1;
+      kiesStart = null;
+      bewaar(); tekenRooster(); tekenVlucht();
+      melden(n === 1 ? "Reis van 1 dag toegevoegd" : "Reis van " + n + " dagen toegevoegd");
+      return;
+    }
+
+    // tik op een bestaande reis: die reis wissen
+    if(state.rooster.weg[iso]){
+      var trips = bouwTrips(), doel = null;
+      for(var i=0;i<trips.length;i++){
+        if(iso >= trips[i].van && iso <= trips[i].tot){ doel = trips[i]; break; }
+      }
+      if(doel){
+        var o = state.rooster.oppas[doel.van] || {};
+        var waarschuw = o.ok && o.wie
+          ? "Deze reis is geregeld met " + o.wie + ".\nToch de hele reis (" + tripLabel(doel) + ") wissen?"
+          : "Reis van " + tripLabel(doel) + " wissen?";
+        if(!confirm(waarschuw)) return;
+        for(var dd = doel.van; dd <= doel.tot; dd = plusDagen(dd, 1)) delete state.rooster.weg[dd];
+        delete state.rooster.oppas[doel.van];
+        if(openTrip === doel.van) openTrip = null;
+        bewaar(); tekenRooster(); tekenVlucht();
+        melden("Reis gewist");
+      }
+      return;
+    }
+
+    // eerste tik: startdag onthouden
+    kiesStart = iso;
+    tekenRooster();
   });
   $("trips-lijst").addEventListener("input", function(e){
     var k, o;
