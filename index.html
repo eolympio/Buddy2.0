@@ -502,6 +502,13 @@
 
   <!-- ============ ROOSTER ============ -->
   <section class="paneel" id="p-rooster">
+    <div id="accept-kaart" class="kaart" style="display:none;border-color:var(--vlieg);border-width:3px;"><div class="body">
+      <div class="mini-label" id="accept-label" style="color:var(--vlieg);">📩 Antwoord van een oppasser</div>
+      <div id="accept-tekst" style="font-size:15px;margin:6px 0 12px;"></div>
+      <button class="knop" id="accept-ok">✓ Bevestigen</button>
+      <div style="height:8px;"></div>
+      <button class="link-knop" id="accept-nee">Negeren</button>
+    </div></div>
     <div class="kaart"><div class="body">
       <div class="mini-label" id="rooster-werk" style="display:none;"></div>
       <div class="kal-kop">
@@ -677,7 +684,8 @@
         if(Array.isArray(d.voeding) && d.voeding.length) state.voeding = d.voeding;
         if(d.oppas) state.oppas = Object.assign({notities:""}, d.oppas);
         if(d.rooster) state.rooster = Object.assign({weg:{},oppas:{},mensen:[]}, d.rooster);
-        migrMensen(); normOppas();
+        var nieuwe = migrMensen(); normOppas();
+        if(nieuwe) setTimeout(bewaar, 0); // kleuren vastzetten
         var med = null;
         try{ med = JSON.parse(localStorage.getItem("buddy.v2.media") || "null"); }catch(e2){}
         if(med){
@@ -1174,7 +1182,7 @@
       h += '<div class="vac-rij"><div style="flex:1;">' +
              '<div class="vac-naam">' + it.naam + '</div>' +
              '<div class="vac-sub">' + it.info + '</div>' +
-             '<div class="vac-sub2">' + s.sub + '</div>' +
+             '<div class="vac-sub2">' + esc(s.sub) + '</div>' +
            '</div><span class="chip ' + s.chip + '">' + s.tekst + '</span>' + wis + '</div>';
     }
     $("vac-lijst").innerHTML = h;
@@ -1203,9 +1211,9 @@
       var bh = "";
       for(var k=0;k<bz.length;k++){
         bh += '<div class="vac-rij"><div style="flex:1;">' +
-                '<div class="vac-naam">' + (bz[k].titel || "Bezoek") + '</div>' +
-                '<div class="vac-sub">' + toonDatum(bz[k].d) + (bz[k].notitie ? " — " + bz[k].notitie : "") + '</div>' +
-              '</div><button class="vac-wis bez-wis" data-d="' + bz[k].d + '" data-t="' + (bz[k].titel||"").replace(/"/g,"&quot;") + '" aria-label="Verwijderen">&times;</button></div>';
+                '<div class="vac-naam">' + esc(bz[k].titel || "Bezoek") + '</div>' +
+                '<div class="vac-sub">' + toonDatum(bz[k].d) + (bz[k].notitie ? " — " + esc(bz[k].notitie) : "") + '</div>' +
+              '</div><button class="vac-wis bez-wis" data-d="' + bz[k].d + '" data-t="' + esc(bz[k].titel||"") + '" aria-label="Verwijderen">&times;</button></div>';
       }
       $("bez-lijst").innerHTML = bh;
     } else {
@@ -1337,6 +1345,8 @@
       state.rooster = Object.assign({weg:{},oppas:{},mensen:[]}, data.rooster||{});
       migrMensen(); normOppas();
       var on = $("oppas-notities"); if(on) on.value = state.oppas.notities;
+      var mi = $("mail-id"); if(mi) mi.value = state.rooster.mail || "";
+      mailStatus();
 
       bewaarMedia(); bewaar(); tekenAlles();
       var l0 = laatste(); if(l0) $("gewicht").value = l0.kg;
@@ -1656,10 +1666,12 @@
   }
   function migrMensen(){
     if(!Array.isArray(state.rooster.mensen)) state.rooster.mensen = [];
+    var voor = state.rooster.mensen.length;
     for(var k in state.rooster.oppas){
       var ow = (state.rooster.oppas[k] || {}).wie;
       if(ow) registreer(ow);
     }
+    return state.rooster.mensen.length !== voor; // nieuwe oppassers gevonden
   }
   var nu0 = new Date();
   var roosterJaar = nu0.getFullYear(), roosterMaand = nu0.getMonth();
@@ -1798,6 +1810,7 @@
                  chips +
                  '<input class="trip-wie" data-k="' + t.van + '" placeholder="' + wiePh + '" value="' + esc(o.wie||"") + '">' +
                  sel +
+                 (o.ok && o.wie ? '<button class="knop licht klein trip-bevestig" data-k="' + t.van + '" style="margin-top:10px;">📤 Stuur bevestiging naar ' + esc(o.wie) + '</button>' : '') +
                '</div>';
       }
       h += '<div class="trip-blok' + (open ? ' open' : '') + '">' +
@@ -1956,6 +1969,30 @@
       bewaar(); tekenRooster(); tekenVlucht();
       return;
     }
+    var bev = e.target.closest(".trip-bevestig");
+    if(bev){
+      var kb = bev.dataset.k;
+      var ob = state.rooster.oppas[kb] || {};
+      var tb = null, alleT = komendeTrips();
+      for(var bi=0; bi<alleT.length; bi++){ if(alleT[bi].van === kb){ tb = alleT[bi]; break; } }
+      if(!tb) return;
+      var naamB = state.profiel.naam || "Buddy";
+      var mijnD = {v:1, n:ob.wie||"", h:naamB, t:[[tb.van, tb.tot, ob.best||"", ob.terug||""]]};
+      if(state.rooster.mail) mijnD.f = state.rooster.mail;
+      var mijnUrl = location.origin + location.pathname + "#mijn=" + b64uEnc(JSON.stringify(mijnD));
+      var txtB = "Hoi " + (ob.wie || "") + "! Bevestigd 🐾\n" +
+                 "Jij past op " + naamB + ": " + tripLabel(tb) + (ob.best ? " · " + ob.best : "") +
+                 (ob.terug ? "\nOppassen tot " + kort(tb.tot) + " " + DAGDEEL[ob.terug] : "") +
+                 "\n\n🍽 Alles over eten en zorg:\n" + oppasLink() +
+                 "\n\n📅 Je afspraak bekijken of afzeggen:\n" + mijnUrl;
+      if(navigator.share){ navigator.share({text:txtB}).catch(function(){}); return; }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txtB).then(function(){ melden("Bevestiging gekopieerd"); }).catch(function(){ prompt("", txtB); });
+        return;
+      }
+      prompt("", txtB);
+      return;
+    }
     var kop = e.target.closest(".trip-kop");
     if(kop){
       openTrip = (openTrip === kop.dataset.open) ? null : kop.dataset.open;
@@ -2014,6 +2051,101 @@
       bewaar(); tekenRooster(); tekenVlucht();
     }
   });
+
+  var acceptPending = null;
+  function acceptBoot(){
+    var hsh = location.hash || "";
+    var modus = hsh.indexOf("#ok=") === 0 ? "ok" : (hsh.indexOf("#af=") === 0 ? "af" : null);
+    if(!modus) return;
+    var qd;
+    try{ qd = JSON.parse(b64uDec(hsh.slice(4))); }catch(e){ return; }
+    if(!qd || !qd.n || !Array.isArray(qd.t) || !qd.t.length) return;
+
+    var geldig = [], verlopen = 0;
+    var huidige = {};
+    var tr = bouwTrips();
+    for(var i=0;i<tr.length;i++) huidige[tr[i].van] = tr[i];
+    for(var j=0;j<qd.t.length;j++){
+      var van = qd.t[j][0];
+      if(huidige[van]) geldig.push(huidige[van]); else verlopen++;
+    }
+    if(!geldig.length && !verlopen) return;
+
+    if(modus === "af"){
+      geldig = geldig.filter(function(t){
+        var o = state.rooster.oppas[t.van] || {};
+        return o.wie && o.wie.trim().toLowerCase() === qd.n.trim().toLowerCase();
+      });
+    }
+
+    acceptPending = {naam:qd.n, trips:geldig, modus:modus};
+    var regels = geldig.map(function(t){
+      var o = state.rooster.oppas[t.van] || {};
+      return "• " + tripLabel(t) + (o.best ? " · " + o.best : "");
+    }).join("<br>");
+    var extra = "";
+    if(verlopen) extra = '<div class="vac-sub" style="margin-top:8px;">' + verlopen + (verlopen === 1 ? ' datum is' : ' data zijn') + ' intussen gewijzigd en wordt overgeslagen.</div>';
+    if(modus === "ok"){
+      var bezet = geldig.filter(function(t){ var o = state.rooster.oppas[t.van] || {}; return o.ok && o.wie && o.wie.toLowerCase() !== qd.n.toLowerCase(); });
+      if(bezet.length) extra += '<div class="vac-sub" style="margin-top:8px;color:var(--alarm);">Let op: ' + bezet.length + (bezet.length === 1 ? ' vlucht heeft' : ' vluchten hebben') + ' al een andere oppas — bevestigen vervangt die.</div>';
+    }
+    if(qd.o) extra += '<div class="vac-sub" style="margin-top:8px;">💬 ' + esc(String(qd.o).slice(0,300)) + '</div>';
+
+    var lab = $("accept-label"), knopOk = $("accept-ok");
+    if(modus === "af"){
+      lab.textContent = "⚠️ Afzegging van een oppasser";
+      lab.style.color = "var(--alarm)";
+      $("accept-kaart").style.borderColor = "var(--alarm)";
+      knopOk.textContent = "✓ Dagen weer vrijgeven";
+    } else {
+      lab.textContent = "📩 Antwoord van een oppasser";
+      lab.style.color = "var(--vlieg)";
+      $("accept-kaart").style.borderColor = "var(--vlieg)";
+      knopOk.textContent = "✓ Bevestigen";
+    }
+
+    if(geldig.length){
+      $("accept-tekst").innerHTML = '<b>' + esc(qd.n) + '</b> ' +
+        (modus === "af" ? 'kan <b>niet meer</b> oppassen op:<br>' : 'kan oppassen op:<br>') + regels + extra;
+      knopOk.style.display = "block";
+    } else {
+      $("accept-tekst").innerHTML = '<b>' + esc(qd.n) + '</b> ' +
+        (modus === "af"
+          ? 'zegde af, maar die dagen staan niet meer op ' + esc(qd.n) + ' in je agenda — er is niets te wijzigen.'
+          : 'antwoordde op data die intussen gewijzigd zijn.') + extra;
+      knopOk.style.display = "none";
+      acceptPending = null;
+    }
+    $("accept-kaart").style.display = "block";
+    var knop = document.querySelector('.tabs button[data-p="rooster"]');
+    if(knop) knop.click();
+    try{ history.replaceState(null, "", location.pathname); }catch(e2){ location.hash = ""; }
+  }
+
+  function acceptSluit(){
+    acceptPending = null;
+    $("accept-kaart").style.display = "none";
+  }
+
+  $("accept-ok").addEventListener("click", function(){
+    if(!acceptPending) return;
+    var afzegging = acceptPending.modus === "af";
+    if(!afzegging) registreer(acceptPending.naam);
+    for(var i=0;i<acceptPending.trips.length;i++){
+      var k = acceptPending.trips[i].van;
+      var o = state.rooster.oppas[k] || {};
+      if(afzegging){ o.wie = ""; o.ok = false; }
+      else { o.wie = acceptPending.naam; o.ok = true; }
+      state.rooster.oppas[k] = o;
+    }
+    var n = acceptPending.trips.length;
+    acceptSluit();
+    bewaar(); tekenRooster(); tekenVlucht();
+    melden(afzegging
+      ? (n === 1 ? "Vlucht staat weer open" : n + " vluchten staan weer open")
+      : n + (n === 1 ? " vlucht" : " vluchten") + " geregeld ✓");
+  });
+  $("accept-nee").addEventListener("click", acceptSluit);
 
   $("vlucht-kaart").addEventListener("click", function(){
     var kn = document.querySelector('.tabs button[data-p="rooster"]');
@@ -2114,11 +2246,20 @@
     };
 
     var verzondenOk = false;
+    function bevestigLink(){
+      var paren = [];
+      for(var i=0;i<d.t.length;i++){ if(keuze[i]) paren.push([d.t[i][0], d.t[i][1]]); }
+      if(!paren.length || !naamW.trim()) return "";
+      var q = {n:naamW.trim().slice(0,40), t:paren};
+      return location.origin + location.pathname + "#ok=" + b64uEnc(JSON.stringify(q));
+    }
     function bouwTekst(){
       var T = TAAL[taal], sel = [];
       for(var i=0;i<d.t.length;i++){ if(keuze[i]) sel.push(lbl(d.t[i], taal === "en")); }
       var txt = T.hoi(naamW.trim()) + "\n" + (sel.length ? T.kan + "\n• " + sel.join("\n• ") : T.geen);
       if(opm.trim()) txt += "\n💬 " + opm.trim();
+      var bl = bevestigLink();
+      if(bl) txt += "\n\n" + (taal==="en" ? "Confirm in one tap:" : "In één tik bevestigen:") + "\n" + bl;
       return txt + "\n🐾";
     }
     function deelZelf(){
@@ -2141,7 +2282,8 @@
       var body = {
         _subject: (taal==="en" ? "Dog-sitting reply from " : "Oppas-antwoord van ") + naamW.trim(),
         naam: naamW.trim(),
-        antwoord: bouwTekst()
+        antwoord: bouwTekst(),
+        bevestig_link: bevestigLink()
       };
       fetch("https://formspree.io/f/" + encodeURIComponent(d.f), {
         method:"POST",
@@ -2195,6 +2337,151 @@
       Array.prototype.forEach.call(boxes, function(b){
         b.addEventListener("change", function(){ keuze[+this.dataset.i] = this.checked; });
       });
+      window.scrollTo(0,0);
+    }
+    render();
+    return true;
+  }
+
+  /* ---------- afspraak van de oppas ---------- */
+  function mijnBoot(){
+    var hsh = location.hash || "";
+    if(hsh.indexOf("#mijn=") !== 0) return false;
+    var d;
+    try{ d = JSON.parse(b64uDec(hsh.slice(6))); }catch(e){ return false; }
+    if(!d || !Array.isArray(d.t) || !d.t.length) return false;
+
+    var taal = "nl", opm = "", verzonden = false;
+    var fotoSrc3 = "";
+    try{ var fe3 = document.getElementById("pas-foto"); if(fe3) fotoSrc3 = fe3.getAttribute("src") || ""; }catch(e0){}
+    var hond = d.h || "de hond";
+
+    var T3 = {
+      nl: {
+        titel:"Jij past op " + esc(hond),
+        sub:"Dit is jullie afspraak — bewaar deze link.",
+        tot:"🕐 Oppassen tot:",
+        vraag:"Reden of bericht (optioneel)",
+        afzeg:"Ik kan toch niet oppassen",
+        bevestig:"Weet je het zeker? De eigenaar krijgt een bericht en moet dan iemand anders zoeken.",
+        klaar:"✅ Doorgegeven",
+        hoi:"Sorry! Ik kan toch niet oppassen op:",
+        stuurUitleg:"Stuur dit bericht naar de eigenaar zodat de dagen weer vrijkomen.",
+        anders:"Andere data nodig? Stuur gewoon een berichtje — daarna kan de eigenaar het aanpassen."
+      },
+      en: {
+        titel:"You're looking after " + esc(hond),
+        sub:"This is your arrangement — keep this link.",
+        tot:"🕐 Sitting until:",
+        vraag:"Reason or message (optional)",
+        afzeg:"I can't do it after all",
+        bevestig:"Are you sure? The owner will be notified and will need to find someone else.",
+        klaar:"✅ Sent",
+        hoi:"Sorry! I can't look after them on:",
+        stuurUitleg:"Send this message to the owner so the days open up again.",
+        anders:"Need different dates? Just send a message — the owner can adjust it."
+      }
+    };
+
+    function mnd(iso, en){
+      var M = en ? ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] : MAANDEN;
+      var q = iso.split("-");
+      return parseInt(q[2],10) + " " + M[parseInt(q[1],10)-1];
+    }
+    function dagdeelT(code, en){
+      var NL = {och:"'s ochtends", mid:"'s middags", av:"'s avonds", nacht:"'s nachts"};
+      var EN = {och:"in the morning", mid:"in the afternoon", av:"in the evening", nacht:"at night"};
+      return (en ? EN : NL)[code] || "";
+    }
+    function periode(t, en){
+      if(t[0] === t[1]) return mnd(t[0], en);
+      return (t[0].slice(0,7) === t[1].slice(0,7) ? parseInt(t[0].split("-")[2],10) : mnd(t[0], en)) + "–" + mnd(t[1], en);
+    }
+
+    function afLink(){
+      var paren = [];
+      for(var i=0;i<d.t.length;i++) paren.push([d.t[i][0], d.t[i][1]]);
+      var q = {n:(d.n||"").slice(0,40), t:paren};
+      if(opm.trim()) q.o = opm.trim().slice(0,300);
+      return location.origin + location.pathname + "#af=" + b64uEnc(JSON.stringify(q));
+    }
+    function afTekst(){
+      var en = taal === "en", T = T3[taal], regels = [];
+      for(var i=0;i<d.t.length;i++) regels.push(periode(d.t[i], en) + (d.t[i][2] ? " · " + d.t[i][2] : ""));
+      var txt = (d.n ? d.n + ": " : "") + T.hoi + "\n• " + regels.join("\n• ");
+      if(opm.trim()) txt += "\n💬 " + opm.trim();
+      return txt + "\n\n" + (en ? "Free up these days in one tap:" : "In één tik weer vrijgeven:") + "\n" + afLink() + "\n🐾";
+    }
+
+    function afzeggen(){
+      var T = T3[taal];
+      if(!confirm(T.bevestig)) return;
+      var txt = afTekst();
+      function klaar(){
+        verzonden = true;
+        render();
+      }
+      if(d.f){
+        var knop = document.getElementById("mijn-af");
+        knop.disabled = true;
+        knop.textContent = taal==="en" ? "Sending…" : "Versturen…";
+        fetch("https://formspree.io/f/" + encodeURIComponent(d.f), {
+          method:"POST",
+          headers:{"Accept":"application/json","Content-Type":"application/json"},
+          body: JSON.stringify({_subject:(taal==="en" ? "Cancellation from " : "Afzegging van ") + (d.n||""), naam:d.n||"", antwoord:txt})
+        }).then(function(r){
+          if(!r.ok) throw new Error("x");
+          klaar();
+          melden(taal==="en" ? "The owner has been notified" : "De eigenaar is verwittigd");
+        }).catch(function(){
+          knop.disabled = false; knop.textContent = T.afzeg;
+          if(navigator.share){ navigator.share({text:txt}).catch(function(){}); return; }
+          prompt("", txt);
+        });
+        return;
+      }
+      if(navigator.share){ navigator.share({text:txt}).then(klaar).catch(function(){}); return; }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(function(){ melden(taal==="en" ? "Copied — send it to the owner" : "Gekopieerd — stuur het naar de eigenaar"); klaar(); }).catch(function(){ prompt("", txt); klaar(); });
+        return;
+      }
+      prompt("", txt); klaar();
+    }
+
+    function render(){
+      var T = T3[taal], en = taal === "en", rijen = "";
+      for(var i=0;i<d.t.length;i++){
+        var t = d.t[i];
+        rijen += '<div class="kaart"><div class="body">' +
+                   '<div class="vac-naam" style="font-size:18px;">' + periode(t, en) + (t[2] ? ' · ' + esc(t[2]) : '') + '</div>' +
+                   (t[3] ? '<div class="vac-sub2" style="margin-top:4px;">' + T.tot + ' <b>' + mnd(t[1], en) + ' ' + dagdeelT(t[3], en) + '</b></div>' : '') +
+                 '</div></div>';
+      }
+      document.querySelector(".app").innerHTML =
+        '<header style="text-align:center;">' +
+          '<div style="display:flex;justify-content:center;gap:6px;margin-bottom:14px;">' +
+            '<button class="knop licht klein" id="t-nl" style="width:auto;padding:0 18px;' + (taal==="nl" ? 'background:var(--ink);color:var(--paper);' : '') + '">NL</button>' +
+            '<button class="knop licht klein" id="t-en" style="width:auto;padding:0 18px;' + (taal==="en" ? 'background:var(--ink);color:var(--paper);' : '') + '">EN</button>' +
+          '</div>' +
+          (fotoSrc3 ? '<img src="' + fotoSrc3 + '" alt="" style="width:104px;height:104px;border-radius:50%;object-fit:cover;border:4px solid var(--ink);display:block;margin:0 auto 12px;">' : '') +
+          '<div class="naam" style="font-size:28px;">' + T.titel + '</div>' +
+          '<div class="sub">' + T.sub + '</div>' +
+        '</header>' + rijen +
+        (verzonden
+          ? '<div class="tip"><b>' + T.klaar + '</b></div>'
+          : '<div class="kaart"><div class="body">' +
+              '<div class="veldrij"><label>' + T.vraag + '</label><textarea id="mijn-opm" rows="2">' + esc(opm) + '</textarea></div>' +
+              '<button class="knop" id="mijn-af" style="background:var(--alarm);border-color:var(--alarm);">' + T.afzeg + '</button>' +
+              '<p style="font-size:12.5px;color:var(--soft);margin-top:9px;">' + T.stuurUitleg + '</p>' +
+            '</div></div>' +
+            '<div class="tip">' + T.anders + '</div>') +
+        '<footer>Buddy-app</footer>';
+      document.getElementById("t-nl").addEventListener("click", function(){ taal = "nl"; render(); });
+      document.getElementById("t-en").addEventListener("click", function(){ taal = "en"; render(); });
+      var om = document.getElementById("mijn-opm");
+      if(om) om.addEventListener("input", function(){ opm = this.value; });
+      var ab = document.getElementById("mijn-af");
+      if(ab) ab.addEventListener("click", afzeggen);
       window.scrollTo(0,0);
     }
     render();
@@ -2317,7 +2604,7 @@
     if(f) importeer(f);
   });
 
-  if(oppasBoot() || vraagBoot()) return;
+  if(oppasBoot() || vraagBoot() || mijnBoot()) return;
 
   laad();
   $("oppas-notities").value = state.oppas.notities || "";
@@ -2335,6 +2622,7 @@
     b.classList.toggle("licht", !aan);
   });
   tekenAlles();
+  acceptBoot();
 })();
 </script>
 </body>
