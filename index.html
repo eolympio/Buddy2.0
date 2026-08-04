@@ -1831,7 +1831,10 @@
                  chips +
                  '<input class="trip-wie" data-k="' + t.van + '" placeholder="' + wiePh + '" value="' + esc(o.wie||"") + '">' +
                  sel +
-                 (o.ok && o.wie ? '<button class="knop licht klein trip-bevestig" data-k="' + t.van + '" style="margin-top:10px;">📤 Stuur bevestiging naar ' + esc(o.wie) + '</button>' : '') +
+                 (o.ok && o.wie ? (function(){
+                    var n2 = tripsVanOppas(o.wie).length;
+                    return '<button class="knop licht klein trip-bevestig" data-naam="' + esc(o.wie) + '" style="margin-top:10px;">📤 Stuur ' + esc(o.wie) + ' ' + (n2 > 1 ? 'alle ' + n2 + ' afspraken' : 'de afspraak') + '</button>';
+                  })() : '') +
                '</div>';
       }
       h += '<div class="trip-blok' + (open ? ' open' : '') + '">' +
@@ -1842,6 +1845,42 @@
            '</div>';
     }
     el.innerHTML = h;
+  }
+
+  function tripsVanOppas(naam){
+    naam = (naam || "").trim().toLowerCase();
+    if(!naam) return [];
+    return komendeTrips().filter(function(t){
+      var o = state.rooster.oppas[t.van] || {};
+      return o.ok && o.wie && o.wie.trim().toLowerCase() === naam;
+    });
+  }
+
+  // één bericht met álle afspraken van deze oppas, ook over maanden heen
+  function stuurBevestiging(naam){
+    var lijst = tripsVanOppas(naam);
+    if(!lijst.length){ melden("Geen reizen geregeld met " + naam); return; }
+    var naamB = state.profiel.naam || "Buddy";
+    var payloadT = [], regels = [];
+    for(var i=0;i<lijst.length;i++){
+      var t = lijst[i], o = state.rooster.oppas[t.van] || {};
+      payloadT.push([t.van, t.tot, o.best||"", o.terug||""]);
+      regels.push("• " + tripLabel(t) + (o.best ? " · " + o.best : "") +
+                  (o.terug ? " (tot " + kort(t.tot) + " " + DAGDEEL[o.terug] + ")" : ""));
+    }
+    var mijnD = {v:1, n:naam, h:naamB, t:payloadT};
+    if(state.rooster.mail) mijnD.f = state.rooster.mail;
+    var mijnUrl = location.origin + location.pathname + "#mijn=" + b64uEnc(JSON.stringify(mijnD));
+    var txtB = "Hoi " + naam + "! Bevestigd 🐾\n" +
+               "Jij past op " + naamB + " op deze data:\n" + regels.join("\n") +
+               "\n\n🍽 Alles over eten en zorg:\n" + oppasLink() +
+               "\n\n📅 Al je afspraken bekijken of een datum afzeggen:\n" + mijnUrl;
+    if(navigator.share){ navigator.share({text:txtB}).catch(function(){}); return; }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txtB).then(function(){ melden("Bevestiging gekopieerd"); }).catch(function(){ prompt("", txtB); });
+      return;
+    }
+    prompt("", txtB);
   }
 
   function tekenMensen(){
@@ -1855,8 +1894,12 @@
     }
     var h = "";
     for(var i=0;i<m.length;i++){
+      var aantal = tripsVanOppas(m[i].naam).length;
       h += '<div class="vac-rij"><button class="mens-stip" data-i="' + i + '" aria-label="Kleur veranderen" style="background:' + m[i].kleur + ';"></button>' +
-           '<div style="flex:1;"><div class="vac-naam">' + esc(m[i].naam) + '</div></div>' +
+           '<div style="flex:1;"><div class="vac-naam">' + esc(m[i].naam) + '</div>' +
+           (aantal ? '<div class="vac-sub">' + aantal + (aantal === 1 ? ' reis geregeld' : ' reizen geregeld') + '</div>' : '') +
+           '</div>' +
+           (aantal ? '<button class="knop licht klein mens-stuur" data-naam="' + esc(m[i].naam) + '" style="width:auto;padding:0 12px;" aria-label="Bevestiging sturen">📤</button>' : '') +
            '<button class="vac-wis mens-wis" data-i="' + i + '" aria-label="Verwijderen">&times;</button></div>';
     }
     el.innerHTML = h;
@@ -2031,29 +2074,7 @@
       return;
     }
     var bev = e.target.closest(".trip-bevestig");
-    if(bev){
-      var kb = bev.dataset.k;
-      var ob = state.rooster.oppas[kb] || {};
-      var tb = null, alleT = komendeTrips();
-      for(var bi=0; bi<alleT.length; bi++){ if(alleT[bi].van === kb){ tb = alleT[bi]; break; } }
-      if(!tb) return;
-      var naamB = state.profiel.naam || "Buddy";
-      var mijnD = {v:1, n:ob.wie||"", h:naamB, t:[[tb.van, tb.tot, ob.best||"", ob.terug||""]]};
-      if(state.rooster.mail) mijnD.f = state.rooster.mail;
-      var mijnUrl = location.origin + location.pathname + "#mijn=" + b64uEnc(JSON.stringify(mijnD));
-      var txtB = "Hoi " + (ob.wie || "") + "! Bevestigd 🐾\n" +
-                 "Jij past op " + naamB + ": " + tripLabel(tb) + (ob.best ? " · " + ob.best : "") +
-                 (ob.terug ? "\nOppassen tot " + kort(tb.tot) + " " + DAGDEEL[ob.terug] : "") +
-                 "\n\n🍽 Alles over eten en zorg:\n" + oppasLink() +
-                 "\n\n📅 Je afspraak bekijken of afzeggen:\n" + mijnUrl;
-      if(navigator.share){ navigator.share({text:txtB}).catch(function(){}); return; }
-      if(navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(txtB).then(function(){ melden("Bevestiging gekopieerd"); }).catch(function(){ prompt("", txtB); });
-        return;
-      }
-      prompt("", txtB);
-      return;
-    }
+    if(bev){ stuurBevestiging(bev.dataset.naam); return; }
     var kop = e.target.closest(".trip-kop");
     if(kop){
       openTrip = (openTrip === kop.dataset.open) ? null : kop.dataset.open;
@@ -2091,6 +2112,8 @@
     mk.style.display = (mk.style.display === "none") ? "block" : "none";
   });
   $("mensen-lijst").addEventListener("click", function(e){
+    var snd = e.target.closest(".mens-stuur");
+    if(snd){ stuurBevestiging(snd.dataset.naam); return; }
     var st2 = e.target.closest(".mens-stip");
     if(st2){
       var mi2 = +st2.dataset.i, mm2 = state.rooster.mensen[mi2];
@@ -2510,7 +2533,7 @@
     try{ d = JSON.parse(b64uDec(hsh.slice(6))); }catch(e){ return false; }
     if(!d || !Array.isArray(d.t) || !d.t.length) return false;
 
-    var taal = "nl", opm = "", verzonden = false;
+    var taal = "nl", opm = "", verzonden = false, afKeuze = {};
     var fotoSrc3 = "";
     try{ var fe3 = document.getElementById("pas-foto"); if(fe3) fotoSrc3 = fe3.getAttribute("src") || ""; }catch(e0){}
     var hond = d.h || "de hond";
@@ -2521,23 +2544,27 @@
         sub:"Dit is jullie afspraak — bewaar deze link.",
         tot:"🕐 Oppassen tot:",
         vraag:"Reden of bericht (optioneel)",
-        afzeg:"Ik kan toch niet oppassen",
-        bevestig:"Weet je het zeker? De eigenaar krijgt een bericht en moet dan iemand anders zoeken.",
+        afzeg:"Afzeggen",
+        kies:"Vink aan welke data je niet meer kan:",
+        geenKeuze:"Vink eerst aan welke data je wil afzeggen.",
+        bevestig:"Weet je het zeker? Het baasje krijgt een bericht en moet dan iemand anders zoeken.",
         klaar:"✅ Doorgegeven",
         hoi:"Sorry! Ik kan toch niet oppassen op:",
-        stuurUitleg:"Stuur dit bericht naar de eigenaar zodat de dagen weer vrijkomen.",
-        anders:"Andere data nodig? Stuur gewoon een berichtje — daarna kan de eigenaar het aanpassen."
+        stuurUitleg:"Alleen de aangevinkte data worden afgezegd. De rest blijft gewoon staan.",
+        anders:"Andere data nodig? Stuur gewoon een berichtje — daarna kan het baasje het aanpassen."
       },
       en: {
         titel:"You're looking after " + esc(hond),
         sub:"This is your arrangement — keep this link.",
         tot:"🕐 Sitting until:",
         vraag:"Reason or message (optional)",
-        afzeg:"I can't do it after all",
+        afzeg:"Cancel these dates",
+        kies:"Tick the dates you can no longer do:",
+        geenKeuze:"Tick which dates you want to cancel first.",
         bevestig:"Are you sure? The owner will be notified and will need to find someone else.",
         klaar:"✅ Sent",
         hoi:"Sorry! I can't look after them on:",
-        stuurUitleg:"Send this message to the owner so the days open up again.",
+        stuurUitleg:"Only the ticked dates are cancelled. The rest stays as agreed.",
         anders:"Need different dates? Just send a message — the owner can adjust it."
       }
     };
@@ -2557,16 +2584,21 @@
       return (t[0].slice(0,7) === t[1].slice(0,7) ? parseInt(t[0].split("-")[2],10) : mnd(t[0], en)) + "–" + mnd(t[1], en);
     }
 
+    function gekozen(){
+      var uit = [];
+      for(var i=0;i<d.t.length;i++){ if(afKeuze[i]) uit.push(d.t[i]); }
+      return uit;
+    }
     function afLink(){
-      var paren = [];
-      for(var i=0;i<d.t.length;i++) paren.push([d.t[i][0], d.t[i][1]]);
+      var paren = [], sel = gekozen();
+      for(var i=0;i<sel.length;i++) paren.push([sel[i][0], sel[i][1]]);
       var q = {n:(d.n||"").slice(0,40), t:paren};
       if(opm.trim()) q.o = opm.trim().slice(0,300);
       return location.origin + location.pathname + "#af=" + b64uEnc(JSON.stringify(q));
     }
     function afTekst(){
-      var en = taal === "en", T = T3[taal], regels = [];
-      for(var i=0;i<d.t.length;i++) regels.push(periode(d.t[i], en) + (d.t[i][2] ? " · " + d.t[i][2] : ""));
+      var en = taal === "en", T = T3[taal], regels = [], sel = gekozen();
+      for(var i=0;i<sel.length;i++) regels.push(periode(sel[i], en) + (sel[i][2] ? " · " + sel[i][2] : ""));
       var txt = (d.n ? d.n + ": " : "") + T.hoi + "\n• " + regels.join("\n• ");
       if(opm.trim()) txt += "\n💬 " + opm.trim();
       return txt + "\n\n" + (en
@@ -2576,6 +2608,7 @@
 
     function afzeggen(){
       var T = T3[taal];
+      if(!gekozen().length){ melden(T.geenKeuze); return; }
       if(!confirm(T.bevestig)) return;
       var txt = afTekst();
       function klaar(){
@@ -2618,9 +2651,15 @@
       for(var i=0;i<d.t.length;i++){
         var t = d.t[i];
         rijen += '<div class="kaart"><div class="body">' +
+                   (verzonden ? '' : '<label class="vraag-rij" style="padding:0 0 10px;border-bottom:1px solid var(--line);margin-bottom:10px;">' +
+                     '<input type="checkbox" data-a="' + i + '"' + (afKeuze[i] ? ' checked' : '') + '>' +
+                     '<span style="font-size:13px;color:var(--soft);font-weight:700;">' + (en ? "Cancel this one" : "Deze afzeggen") + '</span></label>') +
                    '<div class="vac-naam" style="font-size:18px;">' + periode(t, en) + (t[2] ? ' · ' + esc(t[2]) : '') + '</div>' +
                    (t[3] ? '<div class="vac-sub2" style="margin-top:4px;">' + T.tot + ' <b>' + mnd(t[1], en) + ' ' + dagdeelT(t[3], en) + '</b></div>' : '') +
                  '</div></div>';
+      }
+      if(d.t.length > 1 && !verzonden){
+        rijen = '<div class="mini-label" style="margin-bottom:8px;">' + (en ? d.t.length + " arrangements" : d.t.length + " afspraken") + '</div>' + rijen;
       }
       document.querySelector(".app").innerHTML =
         '<header style="text-align:center;">' +
@@ -2635,6 +2674,7 @@
         (verzonden
           ? '<div class="tip"><b>' + T.klaar + '</b></div>'
           : '<div class="kaart"><div class="body">' +
+              '<div class="mini-label">' + T.kies + '</div>' +
               '<div class="veldrij"><label>' + T.vraag + '</label><textarea id="mijn-opm" rows="2">' + esc(opm) + '</textarea></div>' +
               '<button class="knop" id="mijn-af" style="background:var(--alarm);border-color:var(--alarm);">' + T.afzeg + '</button>' +
               '<p style="font-size:12.5px;color:var(--soft);margin-top:9px;">' + T.stuurUitleg + '</p>' +
@@ -2647,6 +2687,10 @@
       if(om) om.addEventListener("input", function(){ opm = this.value; });
       var ab = document.getElementById("mijn-af");
       if(ab) ab.addEventListener("click", afzeggen);
+      var vakjes = document.querySelectorAll('input[data-a]');
+      Array.prototype.forEach.call(vakjes, function(v){
+        v.addEventListener("change", function(){ afKeuze[+this.dataset.a] = this.checked; });
+      });
       window.scrollTo(0,0);
     }
     render();
